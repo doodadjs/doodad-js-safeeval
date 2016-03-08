@@ -1,0 +1,89 @@
+{
+	"//": "Encoding: utf8",
+	"//": "",
+	"//": "    dOOdad - Object-oriented programming framework",
+	"//": "    File: make.json - Make data file",
+	"//": "    Project home: https://sourceforge.net/projects/doodad-js/",
+	"//": "    Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code",
+	"//": "    Author: Claude Petit, Quebec city",
+	"//": "    Contact: doodadjs [at] gmail.com",
+	"//": "    Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !",
+	"//": "    Licence: Apache V2",
+	"//": "",
+	"//": "    Copyright 2016 Claude Petit",
+	"//": "",
+	"//": "    Licensed under the Apache License, Version 2.0 (the \"License\");",
+	"//": "    you may not use this file except in compliance with the License.",
+	"//": "    You may obtain a copy of the License at",
+	"//": "",
+	"//": "     http://www.apache.org/licenses/LICENSE-2.0",
+	"//": "",
+	"//": "    Unless required by applicable law or agreed to in writing, software",
+	"//": "    distributed under the License is distributed on an \"AS IS\" BASIS,",
+	"//": "    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.",
+	"//": "    See the License for the specific language governing permissions and",
+	"//": "    limitations under the License.",
+	"//": "",
+	"makeData": {
+		"tasks": {
+			"make": {
+				"operations": [
+					{
+						"class": "Make.File.Javascript",
+						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
+						"destination": "%PACKAGEDIR%/Tools_SafeEval.min.js",
+						"runDirectives": true
+					},
+					
+					{
+						"class": "Make.Task",
+						"name": "configure"
+					}
+				]
+			},
+			"configure": {
+				"operations": [
+					{
+						"class": "Make.Folder.Create",
+						"destination": "%INSTALLDIR%/"
+					},
+					{
+						"class": "Make.Folder.Create",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/"
+					},
+					{
+						"class": "Make.File.Copy",
+						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/Tools_SafeEval.js"
+					},
+					{
+						"class": "Make.File.Javascript",
+						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/Tools_SafeEval.min.js",
+						"runDirectives": true
+					},
+					{
+						"class": "Make.File.Copy",
+						"source": "%SOURCEDIR%/LICENSE",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/LICENSE"
+					},
+					{
+						"class": "Make.Generate.Configuration",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/config.json"
+					},
+					{
+						"class": "Make.File.Javascript",
+						"source": "%PACKAGEDIR%/index.js",
+						"destination": "%INSTALLDIR%/%PACKAGENAME%/index.js",
+						"runDirectives": true
+					},
+
+					{
+						"class": "Make.Generate.Configuration",
+						"destination": "%PACKAGEDIR%/config.json"
+					}
+				]
+			}
+		}
+	}
+}
