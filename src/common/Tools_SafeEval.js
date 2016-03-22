@@ -23,40 +23,7 @@
 //	limitations under the License.
 //! END_REPLACE()
 
-(function() {
-	this.initSafeEval = function initSafeEval() {
-		// WARNING: Do not declare any variable and parameter inside this function. Also you must avoid the use of module variables.
-
-		this.constants			= ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'];
-		this.allDigitsRegEx		= /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/;
-		this.createEval			= function(/*locals*/) {
-									return eval(
-										"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
-											"return function(/*expression*/) {" +
-												"return eval(arguments[0]);" +
-											"};" +
-										"})"
-									);
-								};
-		this.createStrictEval	= function(/*locals*/) {
-									return eval(
-										"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
-											"return function(/*expression*/) {" +
-												'"use strict";' +
-												"return eval(arguments[0]);" +
-											"};" +
-										"})"
-									);
-								};
-		this.evalNoLocals		= function(/*expression*/) {
-									return eval(arguments[0]);
-								};
-		this.evalNoLocalsStrict	= function(/*expression*/) {
-									"use strict";
-									return eval(arguments[0]);
-								};
-	};
-}).call((function() {
+(function(initSafeEval) {
 	var global = this;
 	
 	var exports = {};
@@ -68,24 +35,24 @@
 		DD_MODULES = (DD_MODULES || {});
 		DD_MODULES['Doodad.Tools.SafeEval'] = {
 			type: null,
-			version: '0.1.0a',
+			version: '0.2.0a',
 			namespaces: null,
 			dependencies: [
 				{
 					name: 'Doodad.Types', 
-					version: '2.0.0',
+					version: '2.2.0',
 				},
 				{
 					name: 'Doodad.Tools', 
-					version: '2.0.0',
+					version: '2.2.0',
 				},
 				{
 					name: 'Doodad.Tools.Locale',
-					version: '1.3.0',
+					version: '2.0.0',
 				}, 
 				{
 					name: 'Doodad.Tools.Unicode',
-					version: '0.1.0',
+					version: '0.3.0',
 				}, 
 			],
 			exports: exports,
@@ -151,7 +118,9 @@
 					function validateToken() {
 						if (tokenName) {
 							if (isGlobal) {
-								if (safeEval.allDigitsRegEx.test(tokenName)) {
+								if (tools.indexOf(safeEval.deniedTokens, tokenName) >= 0) {
+									throw new types.AccessDenied("Access to '~0~' is denied.", [tokenName]);
+								} else if (safeEval.allDigitsRegEx.test(tokenName)) {
 									// Valid
 								} else if (tools.indexOf(safeEval.constants, tokenName) >= 0) {
 									// Valid
@@ -270,14 +239,14 @@
 						};
 						
 						globals = tools.reduce(globals, function(locals, name) {
-							locals[name] = ((name in global) ? global[name] : safeEval.evalNoLocals(name));
+							locals[name] = ((name in global) ? global[name] : types.eval(name));
 							return locals;
 						}, {});
 						
 						locals = types.extend({}, globals, locals);
 						
 						if (types.isEmpty(locals)) {
-							return safeEval.evalNoLocalsStrict;
+							return types.evalStrict;
 						} else {
 							return safeEval.createStrictEval(types.keys(locals)).apply(null, types.values(locals));
 						};
@@ -371,7 +340,7 @@
 						root.DD_ASSERT && root.DD_ASSERT(types.isObject(evalCacheObject), "Invalid cache object.");
 						root.DD_ASSERT && root.DD_ASSERT(types.isString(expression), "Invalid expression.");
 						
-						expression = expression.trim();
+						expression = tools.trim(expression);
 
 						if (types.isNothing(preventAssignment)) {
 							preventAssignment = true;
@@ -395,7 +364,7 @@
 						};
 					});
 					
-				exports.initSafeEval.call(safeEval);
+				initSafeEval.call(safeEval);
 
 
 				//===================================
@@ -413,6 +382,60 @@
 		// <PRB> export/import are not yet supported in browsers
 		global.DD_MODULES = exports.add(global.DD_MODULES);
 	};
-	
-	return exports;
-}).call((typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this)));
+
+}).call((typeof global !== 'undefined') ? global : ((typeof window !== 'undefined') ? window : this),
+
+	/*initSafeEval*/
+	(function() {
+		// WARNING: Do not declare any variable and parameter inside this function. Also you must avoid the use of variables.
+
+		this.deniedTokens       = ['eval', 'arguments', 'this'];
+		this.constants          = ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'];
+		this.allDigitsRegEx     = /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/;
+//IE8		this.oldEval            = (typeof eval("(function(){})") !== 'function'),
+//IE8		this.createEval         = (this.oldEval ? 
+		this.createEval         = 
+//IE8									// Old engines
+//IE8									function(/*locals*/) {
+//IE8										var result;
+//IE8										eval('result=' +
+//IE8											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
+//IE8												"return function(/*expression*/) {" +
+//IE8													"return eval(arguments[0]);" +
+//IE8												"};" +
+//IE8											"})"
+//IE8										);
+//IE8										return result;
+//IE8									}
+//IE8								:
+									// Recent engines
+									function(/*locals*/) {
+										return eval(
+											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
+												"return function(/*expression*/) {" +
+													"return eval(arguments[0]);" +
+												"};" +
+											"})"
+										);
+									}
+//IE8								);
+//IE8		this.createStrictEval   = (this.oldEval ? 
+		this.createStrictEval   = 
+//IE8									// Old engines
+//IE8									// NOTE: There is no strict mode with old engines
+//IE8									this.createEval
+//IE8								:
+									// Recent engines
+									function(/*locals*/) {
+										return eval(
+											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
+												"return function(/*expression*/) {" +
+													'"use strict";' +
+													"return eval(arguments[0]);" +
+												"};" +
+											"})"
+										);
+									}
+//IE8								);
+	})
+);
