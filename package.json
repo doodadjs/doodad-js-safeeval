@@ -1,7 +1,8 @@
 {
   "name": "doodad-js-safeeval",
-  "version": "0.2.0",
-  "description": "doodad-js SafeEval (alpha)",
+  "stage": "b",
+  "version": "1.0.0",
+  "description": "doodad-js SafeEval (beta)",
   "homepage": "https://sourceforge.net/projects/doodad-js/",
   "config": {
   },

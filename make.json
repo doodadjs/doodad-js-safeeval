@@ -34,6 +34,22 @@
 						"destination": "%PACKAGEDIR%/Tools_SafeEval.min.js",
 						"runDirectives": true
 					},
+					{
+						"class": "Make.File.Javascript",
+						"source": "%SOURCEDIR%/common/index.js",
+						"destination": "%PACKAGEDIR%/index.js",
+						"runDirectives": true
+					},
+					{
+						"class": "Make.File.Javascript",
+						"source": "%SOURCEDIR%/browserify/browserify.js",
+						"destination": "%PACKAGEDIR%/browserify.js",
+						"runDirectives": true
+					},
+					
+					{
+						"class": "Make.Update.PackageJson"
+					},
 					
 					{
 						"class": "Make.Task",
@@ -73,7 +89,7 @@
 					},
 					{
 						"class": "Make.File.Javascript",
-						"source": "%PACKAGEDIR%/index.js",
+						"source": "%SOURCEDIR%/common/index.js",
 						"destination": "%INSTALLDIR%/%PACKAGENAME%/index.js",
 						"runDirectives": true
 					},

@@ -37,25 +37,7 @@
 			type: null,
 			version: '0.2.0a',
 			namespaces: null,
-			dependencies: [
-				{
-					name: 'Doodad.Types', 
-					version: '2.2.0',
-				},
-				{
-					name: 'Doodad.Tools', 
-					version: '2.2.0',
-				},
-				{
-					name: 'Doodad.Tools.Locale',
-					version: '2.0.0',
-				}, 
-				{
-					name: 'Doodad.Tools.Unicode',
-					version: '0.3.0',
-				}, 
-			],
-			exports: exports,
+			dependencies: null,
 			
 			create: function create(root, /*optional*/_options) {
 				"use strict";
