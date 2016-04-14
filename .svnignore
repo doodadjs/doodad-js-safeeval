@@ -1,0 +1,6 @@
+browserify
+dist
+res
+config.json
+*.min.js
+node_modules

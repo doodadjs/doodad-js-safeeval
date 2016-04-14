@@ -22,5 +22,3 @@
 //	limitations under the License.
 
 "use strict";
-
-module.exports = require('./src/common/index.js');

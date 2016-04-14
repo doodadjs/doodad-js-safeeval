@@ -24,82 +24,67 @@
 	"//": "    See the License for the specific language governing permissions and",
 	"//": "    limitations under the License.",
 	"//": "",
-	"makeData": {
-		"tasks": {
-			"make": {
-				"operations": [
-					{
-						"class": "Make.File.Javascript",
-						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
-						"destination": "%PACKAGEDIR%/Tools_SafeEval.min.js",
-						"runDirectives": true
-					},
-					{
-						"class": "Make.File.Javascript",
-						"source": "%SOURCEDIR%/common/index.js",
-						"destination": "%PACKAGEDIR%/index.js",
-						"runDirectives": true
-					},
-					{
-						"class": "Make.File.Javascript",
-						"source": "%SOURCEDIR%/browserify/browserify.js",
-						"destination": "%PACKAGEDIR%/browserify.js",
-						"runDirectives": true
-					},
-					
-					{
-						"class": "Make.Update.PackageJson"
-					},
-					
-					{
-						"class": "Make.Task",
-						"name": "configure"
-					}
-				]
-			},
-			"configure": {
-				"operations": [
-					{
-						"class": "Make.Folder.Create",
-						"destination": "%INSTALLDIR%/"
-					},
-					{
-						"class": "Make.Folder.Create",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/"
-					},
-					{
-						"class": "Make.File.Copy",
-						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/Tools_SafeEval.js"
-					},
-					{
-						"class": "Make.File.Javascript",
-						"source": "%SOURCEDIR%/common/Tools_SafeEval.js",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/Tools_SafeEval.min.js",
-						"runDirectives": true
-					},
-					{
-						"class": "Make.File.Copy",
-						"source": "%SOURCEDIR%/LICENSE",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/LICENSE"
-					},
-					{
-						"class": "Make.Generate.Configuration",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/config.json"
-					},
-					{
-						"class": "Make.File.Javascript",
-						"source": "%SOURCEDIR%/common/index.js",
-						"destination": "%INSTALLDIR%/%PACKAGENAME%/index.js",
-						"runDirectives": true
-					},
+	"dependencies": [
+		{
+			"name": "doodad-js",
+			"optional": false,
+			"client": true,
+			"server": true,
+			"browserify": true
+		},
+		{
+			"name": "doodad-js-locale",
+			"optional": false,
+			"client": true,
+			"server": true,
+			"browserify": true
+		},
+		{
+			"name": "doodad-js-unicode",
+			"optional": false,
+			"client": true,
+			"server": true,
+			"browserify": true
+		}
+	],
+	"modules": [
+		{
+			"src": "common/Tools_SafeEval.js",
+			"client": true,
+			"server": true,
+			"browserify": true
+		}
+	],
+	"tasks": {
+		"make": {
+			"operations": [
+				{
+					"class": "Make.Generate.Package"
+				},
 
-					{
-						"class": "Make.Generate.Configuration",
-						"destination": "%PACKAGEDIR%/config.json"
-					}
-				]
-			}
+				{
+					"class": "Make.Task",
+					"name": "install"
+				},
+				{
+					"class": "Make.Task",
+					"name": "browserify"
+				}
+			]
+		},
+		"install": {
+			"operations": [
+				{
+					"class": "Make.Generate.Package"
+				}
+			]
+		},
+		"browserify": {
+			"operations": [
+				{
+					"class": "Make.Generate.Package"
+				}
+			]
 		}
 	}
 }
