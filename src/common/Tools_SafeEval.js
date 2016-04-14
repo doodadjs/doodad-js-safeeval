@@ -69,10 +69,6 @@
 				// Options
 				//===================================
 					
-				//__Internal__.oldSetOptions = safeEval.setOptions;
-				//safeEval.setOptions = function setOptions(/*paramarray*/) {
-				//};
-				
 				//safeEval.setOptions({
 				//}, _options);
 				
