@@ -221,7 +221,9 @@
 						};
 						
 						globals = tools.reduce(globals, function(locals, name) {
-							locals[name] = ((name in global) ? global[name] : types.eval(name));
+							if (name in global) {
+								locals[name] = global[name];
+							};
 							return locals;
 						}, {});
 						

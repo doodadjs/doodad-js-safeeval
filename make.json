@@ -27,24 +27,28 @@
 	"dependencies": [
 		{
 			"name": "doodad-js",
-			"optional": false,
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
 			"name": "doodad-js-locale",
-			"optional": false,
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
 			"name": "doodad-js-unicode",
-			"optional": false,
 			"client": true,
 			"server": true,
 			"browserify": true
+		},
+		{
+			"name": "doodad-js/tests",
+			"client": true,
+			"server": true,
+			"browserify": true,
+			"test": true
 		}
 	],
 	"modules": [
@@ -53,6 +57,13 @@
 			"client": true,
 			"server": true,
 			"browserify": true
+		},
+		{
+			"src": "test/Unit_Tools_SafeEval.js",
+			"client": true,
+			"server": true,
+			"browserify": true,
+			"test": true
 		}
 	],
 	"tasks": {
