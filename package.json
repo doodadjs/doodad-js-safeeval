@@ -1,7 +1,7 @@
 {
   "name": "doodad-js-safeeval",
   "stage": "b",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "doodad-js SafeEval (beta)",
   "files": [
 	"tonic.js"

@@ -106,7 +106,7 @@
 									// Valid
 								} else if (tools.indexOf(safeEval.constants, tokenName) >= 0) {
 									// Valid
-								} else if (types.hasKey(locals, tokenName)) {
+								} else if (types.has(locals, tokenName)) {
 									// Valid
 								} else if (tools.indexOf(globals, tokenName) >= 0) {
 									// Valid
@@ -341,7 +341,7 @@
 						
 						if (expression === '__SAFE_EVAL__') {
 							return evalFn(expression);
-						} else if (types.hasKey(evalCacheObject, expression)) {
+						} else if (types.has(evalCacheObject, expression)) {
 							return evalCacheObject[expression];
 						} else {
 							return evalCacheObject[expression] = evalFn(expression);
