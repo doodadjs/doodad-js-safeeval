@@ -43,7 +43,7 @@
 		DD_MODULES['Doodad.Tools.SafeEval'] = {
 			version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE() */,
 			
-			create: function create(root, /*optional*/_options) {
+			create: function create(root, /*optional*/_options, _shared) {
 				"use strict";
 
 				//===================================
@@ -66,19 +66,11 @@
 				
 				
 				//===================================
-				// Options
-				//===================================
-					
-				//safeEval.setOptions({
-				//}, _options);
-				
-
-				//===================================
 				// Native functions
 				//===================================
 					
-				//var __Natives__ = {
-				//};
+				//types.complete(_shared.Natives, {
+				//});
 				
 				
 				__Internal__.validateExpression = function(expression, locals, globals, /*optional*/preventAssignment) {
@@ -339,7 +331,7 @@
 							evalCacheObject.__SAFE_EVAL__ = evalFn = __Internal__.createEvalFn(locals, globals);
 						};
 						
-						if (expression === '__SAFE_EVAL__') {
+						if ((expression === '__SAFE_EVAL__') || (expression === '__proto__') || (expression === 'constructor')) {
 							return evalFn(expression);
 						} else if (types.has(evalCacheObject, expression)) {
 							return evalCacheObject[expression];

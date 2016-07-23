@@ -80,6 +80,10 @@
 				{
 					"class": "Make.Task",
 					"name": "browserify"
+				},
+				{
+					"class": "Make.Task",
+					"name": "webpack"
 				}
 			]
 		},
@@ -91,6 +95,13 @@
 			]
 		},
 		"browserify": {
+			"operations": [
+				{
+					"class": "Make.Generate.Package"
+				}
+			]
+		},
+		"webpack": {
 			"operations": [
 				{
 					"class": "Make.Generate.Package"

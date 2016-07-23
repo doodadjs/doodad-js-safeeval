@@ -49,11 +49,10 @@
 			priority: null,
 			
 			proto: {
-				run: function run(entry, /*optional*/options) {
+				run: function run(root, /*optional*/options) {
 					"use strict";
 
-					var root = entry.root,
-						doodad = root.Doodad,
+					var doodad = root.Doodad,
 						types = doodad.Types,
 						tools = doodad.Tools,
 						namespaces = doodad.Namespaces,
@@ -83,9 +82,9 @@
 					command.run(0.1, {},			/**/ "0.1");
 					command.run(0.1, {},			/**/ ".1");
 					command.run(1, {},				/**/ "+1");
-					command.run(-1, {},			/**/ "-1");
-					command.run(-1, {},			/**/ "+-1");
-					command.run(-1, {},			/**/ "-+1");
+					command.run(-1, {},			    /**/ "-1");
+					command.run(-1, {},			    /**/ "+-1");
+					command.run(-1, {},			    /**/ "-+1");
 					command.run('hello', {},		/**/ "'hello'");
 					command.run("hello 'sir'", {},	/**/ "'hello \\'sir\\''");
 					command.run('a=1', {},			/**/ "'a=1'");
@@ -133,7 +132,7 @@
 						stream.closeElement();
 						stream.openElement({tag: 'div', attrs: 'class="denied"'});
 					};
-					command.run(types.AccessDenied, {mode: 'isinstance'}, /**/ "a=1", null, ['a']);   // assignment denied
+					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=+1", null, ['a']);   // assignment denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=-1", null, ['a']);   // assignment denied
