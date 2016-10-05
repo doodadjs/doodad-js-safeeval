@@ -1,7 +1,6 @@
-// dOOdad - Object-oriented programming framework
+// doodad-js - Object-oriented programming framework
 // File: index.js - Will get replaced on build.
-// Project home: https://sourceforge.net/projects/doodad-js/
-// Trunk: svn checkout svn://svn.code.sf.net/p/doodad-js/code/trunk doodad-js-code
+// Project home: https://github.com/doodadjs/
 // Author: Claude Petit, Quebec city
 // Contact: doodadjs [at] gmail.com
 // Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !

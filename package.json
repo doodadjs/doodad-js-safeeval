@@ -1,7 +1,7 @@
 {
   "name": "doodad-js-safeeval",
   "stage": "b",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "description": "doodad-js SafeEval (beta)",
   "files": [
 	"tonic.js"
@@ -11,7 +11,13 @@
 	"safeeval",
 	"eval"
   ],
-  "dependencies": {
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/doodadjs/doodad-js-safeeval.git"
+  },
+  "bugs": {
+    "url": "https://github.com/doodadjs/doodad-js-safeeval/issues",
+    "email": "doodadjs@gmail.com"
   },
   "tonicExampleFilename": "tonic.js"
 }
