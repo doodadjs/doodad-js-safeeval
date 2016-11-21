@@ -80,11 +80,11 @@
 						function validateToken() {
 							if (tokenName) {
 								if (isGlobal) {
-									if (tools.indexOf(safeEval.deniedTokens, tokenName) >= 0) {
+									if (tools.indexOf(__Internal__.deniedTokens, tokenName) >= 0) {
 										throw new types.AccessDenied("Access to '~0~' is denied.", [tokenName]);
-									} else if (safeEval.allDigitsRegEx.test(tokenName)) {
+									} else if (__Internal__.allDigitsRegEx.test(tokenName)) {
 										// Valid
-									} else if (tools.indexOf(safeEval.constants, tokenName) >= 0) {
+									} else if (tools.indexOf(__Internal__.constants, tokenName) >= 0) {
 										// Valid
 									} else if (types.has(locals, tokenName)) {
 										// Valid
@@ -212,11 +212,11 @@
 							if (types.isEmpty(locals)) {
 								return types.evalStrict;
 							} else {
-								return safeEval.createStrictEval(types.keys(locals)).apply(null, types.values(locals));
+								return __Internal__.createStrictEval(types.keys(locals)).apply(null, types.values(locals));
 							};
 					};
 					
-					safeEval.eval = root.DD_DOC(
+					safeEval.ADD('eval', root.DD_DOC(
 						//! REPLACE_IF(IS_UNSET('debug'), "null")
 						{
 								author: "Claude Petit",
@@ -264,9 +264,9 @@
 							var evalFn = __Internal__.createEvalFn(locals, globals);
 							
 							return evalFn(expression);
-						});
+						}));
 					
-					safeEval.evalCached = root.DD_DOC(
+					safeEval.ADD('evalCached', root.DD_DOC(
 						//! REPLACE_IF(IS_UNSET('debug'), "null")
 						{
 								author: "Claude Petit",
@@ -326,10 +326,12 @@
 							} else {
 								return evalCacheObject[expression] = evalFn(expression);
 							};
-						});
+						}));
 						
-					initSafeEval.call(safeEval);
+					initSafeEval.call(__Internal__);
 
+					safeEval.ADD('createEval', __Internal__.createEval);
+					safeEval.ADD('createStrictEval', __Internal__.createStrictEval);
 
 					//===================================
 					// Init
