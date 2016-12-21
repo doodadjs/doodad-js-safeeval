@@ -82,6 +82,7 @@
 							brakets = 0,
 							waitArgs = false,
 							parentheses = 0,
+							isShift = false,
 
 							maxSafeInteger = types.getSafeIntegerLen().max;
 							
@@ -155,7 +156,7 @@
 								functionArgs = deniedTokens;
 								deniedTokens = [];
 								brakets = 0;
-							} else if (isAssignment && (chr.chr !== '=')) {
+							} else if ((isAssignment && (chr.chr !== '=')) || (isShift && (chr.chr === '='))) {
 								// Assignment
 								if (preventAssignment) {
 									throw new types.AccessDenied("Assignment is not allowed.");
@@ -209,6 +210,7 @@
 								} else {
 									// Operational chars
 									isAssignment = false;
+									isShift = false;
 									
 									if ((chr.chr === '"') || (chr.chr === "'")) {
 										// Begin String
@@ -233,6 +235,9 @@
 												throw new types.AccessDenied("Increment operators are not allowed.");
 											};
 										};
+									} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
+										// Potential shift assignment
+										isShift = true;
 									} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
 										// Potential assignment
 										isAssignment = true
