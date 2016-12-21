@@ -61,7 +61,7 @@
 					//});
 					
 					
-					__Internal__.validateExpression = function(expression, locals, globals, /*optional*/preventAssignment) {
+					__Internal__.validateExpression = function(expression, locals, globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
 						// TODO: Escape sequences
 						// TODO: String templates
 						
@@ -75,7 +75,15 @@
 							escapeSeq = '',
 							tokenName = '',
 							isGlobal = true,
-							isDot = false;
+							isDot = false,
+							deniedTokens = [],
+							isFunction = false,
+							functionArgs = [],
+							brakets = 0,
+							waitArgs = false,
+							parentheses = 0,
+
+							maxSafeInteger = types.getSafeIntegerLen().max;
 							
 						function validateToken() {
 							if (tokenName) {
@@ -90,8 +98,22 @@
 										// Valid
 									} else if (tools.indexOf(globals, tokenName) >= 0) {
 										// Valid
+									} else if (tools.indexOf(functionArgs, tokenName) >= 0) {
+										// Valid
+									} else if (isFunction && (brakets === 1) && (tokenName === 'return')) {
+										// Valid
+									} else if (tokenName === 'function') {
+										if (!allowFunctions) {
+											throw new types.AccessDenied("Functions are denied.");
+										};
+										if (isFunction) {
+											// For simplicity
+											throw new types.AccessDenied("Function in function is denied.");
+										};
+										isFunction = true;
+										waitArgs = true;
 									} else {
-										throw new types.AccessDenied("Access to '~0~' is denied.", [tokenName]);
+										deniedTokens.push(tokenName);
 									};
 								};
 								tokenName = '';
@@ -119,19 +141,40 @@
 									// End comment block
 									isCommentBlock = false;
 								};
+							} else if (isAssignment && (chr.chr === '>')) {
+								// Arrow function
+								if (!allowFunctions) {
+									throw new types.AccessDenied("Functions are denied.");
+								};
+								if (isFunction) {
+									// For simplicity
+									throw new types.AccessDenied("Function in function is denied.");
+								};
+								isAssignment = false;
+								isFunction = true;
+								functionArgs = deniedTokens;
+								deniedTokens = [];
+								brakets = 0;
 							} else if (isAssignment && (chr.chr !== '=')) {
 								// Assignment
 								if (preventAssignment) {
 									throw new types.AccessDenied("Assignment is not allowed.");
+								};
+								if (deniedTokens.length) {
+									throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
 								};
 							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) {
 								if (isComment && (chr.chr === ';')) {
 								} else {
 									isComment = false;
 									validateToken();
+									if (deniedTokens.length) {
+										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+									};
 									if (!isDot || (chr.chr === ';')) {
 										isGlobal = true;
 									};
+									functionArgs = [];
 								};
 							} else if (isComment) {
 								// Statement comment
@@ -153,9 +196,15 @@
 									// Space
 								} else if ((prevChr === '/') && (chr.chr === '/')) {
 									// Begin statement comment
+									if (deniedTokens.length) {
+										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+									};
 									isComment = true;
 								} else if ((prevChr === '/') && (chr.chr === '*')) {
 									// Begin comment block
+									if (deniedTokens.length) {
+										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+									};
 									isCommentBlock = true;
 								} else {
 									// Operational chars
@@ -163,24 +212,81 @@
 									
 									if ((chr.chr === '"') || (chr.chr === "'")) {
 										// Begin String
+										if (deniedTokens.length) {
+											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+										};
 										isString = true;
 										stringChar = chr.chr;
 									} else if (chr.chr === '`') {
 										// For simplicity.
+										if (deniedTokens.length) {
+											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+										};
 										throw new types.AccessDenied("Template strings are denied.");
 									} else if ((chr.chr === '+') || (chr.chr === '-')) {
+										if (deniedTokens.length) {
+											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+										};
 										if (prevChr === chr.chr) {
 											// Increment
 											if (preventAssignment) {
 												throw new types.AccessDenied("Increment operators are not allowed.");
 											};
 										};
-									} else if ((chr.chr === '=') && ((prevChr !== '=') && (prevChr !== '!'))) {
+									} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
 										// Potential assignment
 										isAssignment = true
 									} else if (chr.chr === '.') {
+										if (deniedTokens.length) {
+											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+										};
 										isDot = true;
 										isGlobal = false;
+									} else if (isFunction && (chr.chr === '{')) {
+										if (brakets >= maxSafeInteger) {
+											// Should not happen
+											throw new types.Error("Integer overflow.");
+										};
+										brakets++;
+									} else if (isFunction && (chr.chr === '}')) {
+										brakets--;
+										if (brakets <= 0) {
+											isFunction = false;
+											brakets = 0;
+											functionArgs = [];
+										};
+									} else if (chr.chr === '(') {
+										if (isFunction) {
+											if (waitArgs) {
+												if (parentheses >= maxSafeInteger) {
+													// Should not happen
+													throw new types.Error("Integer overflow.");
+												};
+												parentheses++;
+											} else {
+												if (deniedTokens.length) {
+													throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+												};
+											};
+										};
+									} else if (chr.chr === ')') {
+										if (isFunction) {
+											if (waitArgs) {
+												waitArgs = false;
+												parentheses = 0;  // can't have more than one parenthese
+												functionArgs = deniedTokens;
+												deniedTokens = [];
+											} else {
+												if (deniedTokens.length) {
+													throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+												};
+											};
+										};
+									} else if (chr.chr === ',') {
+									} else {
+										if (deniedTokens.length) {
+											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+										};
 									};
 								};
 							};
@@ -189,6 +295,10 @@
 						};
 						
 						validateToken();
+
+						if (deniedTokens.length) {
+							throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+						};
 					};
 					
 					__Internal__.createEvalFn = function createEvalFn(locals, globals) {
@@ -220,7 +330,7 @@
 						//! REPLACE_IF(IS_UNSET('debug'), "null")
 						{
 								author: "Claude Petit",
-								revision: 5,
+								revision: 6,
 								params: {
 									expression: {
 										type: 'string',
@@ -237,12 +347,22 @@
 										optional: true,
 										description: "List of allowed global variables.",
 									},
+									preventAssignment: {
+										type: 'boolean',
+										optional: true,
+										description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
+									},
+									allowFunctions: {
+										type: 'boolean',
+										optional: true,
+										description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function delcarations. Otherwise, it will prevent them. Default is 'false'.",
+									},
 								},
 								returns: 'any',
 								description: "Evaluates a Javascript expression with some restrictions.",
 						}
 						//! END_REPLACE()
-						, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/preventAssignment) {
+						, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
 							// NOTE: Caller functions should use "safeEvalCached" for performance issues (only when expressions are controlled and limited)
 							
 							// Restrict access to locals (locals={...}) and globals (globals=[...]).
@@ -254,7 +374,7 @@
 							};
 							
 							if (preventAssignment) {
-								__Internal__.validateExpression(expression, locals, globals, preventAssignment);
+								__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
 							};
 							
 							if (root.DD_ASSERT) {
