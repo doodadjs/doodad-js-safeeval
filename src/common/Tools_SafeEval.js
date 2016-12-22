@@ -84,7 +84,7 @@
 							parentheses = 0,
 							isShift = false,
 
-							maxSafeInteger = types.getSafeIntegerLen().max;
+							maxSafeInteger = types.getSafeIntegerBounds().max;
 							
 						function validateToken() {
 							if (tokenName) {
