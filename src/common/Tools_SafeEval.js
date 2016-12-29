@@ -1,7 +1,7 @@
 (function(initSafeEval) {
 	//! BEGIN_MODULE()
 
-	//! REPLACE_BY("// Copyright 2016 Claude Petit, licensed under Apache License version 2.0\n", true)
+	//! REPLACE_BY("// Copyright 2015-2017 Claude Petit, licensed under Apache License version 2.0\n", true)
 	// doodad-js - Object-oriented programming framework
 	// File: Tools_SafeEval.js - SafeEval tools
 	// Project home: https://github.com/doodadjs/
@@ -10,7 +10,7 @@
 	// Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
 	// License: Apache V2
 	//
-	//	Copyright 2016 Claude Petit
+	//	Copyright 2015-2017 Claude Petit
 	//
 	//	Licensed under the Apache License, Version 2.0 (the "License");
 	//	you may not use this file except in compliance with the License.
