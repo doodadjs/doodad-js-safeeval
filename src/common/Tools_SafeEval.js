@@ -485,7 +485,7 @@
 							};
 						}));
 						
-					initSafeEval.call(__Internal__);
+					initSafeEval.call(__Internal__, global.eval);
 
 					safeEval.ADD('createEval', __Internal__.createEval);
 					safeEval.ADD('createStrictEval', __Internal__.createStrictEval);
@@ -506,7 +506,7 @@
 	((typeof window === 'object') ? window : ((typeof global === 'object') ? global : this))
 ,
 	/*initSafeEval*/
-	(function() {
+	(function(eval) {
 		// WARNING: Do not declare any variable and parameter inside this function. Also you must avoid the use of variables.
 
 		this.deniedTokens       = ['eval', 'arguments', 'this'];
