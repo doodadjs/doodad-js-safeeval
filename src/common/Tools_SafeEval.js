@@ -512,24 +512,7 @@
 		this.deniedTokens       = ['eval', 'arguments', 'this'];
 		this.constants          = ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'];
 		this.allDigitsRegEx     = /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/;
-//IE8		this.oldEval            = (typeof eval("(function(){})") !== 'function'),
-//IE8		this.createEval         = (this.oldEval ? 
-		this.createEval         = 
-//IE8									// Old engines
-//IE8									function(/*locals*/) {
-//IE8										var result;
-//IE8										eval('result=' +
-//IE8											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
-//IE8												"return function(/*expression*/) {" +
-//IE8													"return eval(arguments[0]);" +
-//IE8												"};" +
-//IE8											"})"
-//IE8										);
-//IE8										return result;
-//IE8									}
-//IE8								:
-									// Recent engines
-									function(/*locals*/) {
+		this.createEval         = function(/*locals*/) {
 										return eval(
 											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
 												"return function(/*expression*/) {" +
@@ -538,15 +521,7 @@
 											"})"
 										);
 									}
-//IE8								);
-//IE8		this.createStrictEval   = (this.oldEval ? 
-		this.createStrictEval   = 
-//IE8									// Old engines
-//IE8									// NOTE: There is no strict mode with old engines
-//IE8									this.createEval
-//IE8								:
-									// Recent engines
-									function(/*locals*/) {
+		this.createStrictEval   = function(/*locals*/) {
 										return eval(
 											"(function(" + Array.prototype.join.call(arguments[0], ',') + ") {" +
 												"return function(/*expression*/) {" +
@@ -556,6 +531,5 @@
 											"})"
 										);
 									}
-//IE8								);
 	})
 );
