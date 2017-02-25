@@ -57,8 +57,9 @@
 					// Native functions
 					//===================================
 						
-					//types.complete(_shared.Natives, {
-					//});
+					types.complete(_shared.Natives, {
+						windowEval: global.eval,
+					});
 					
 					
 					__Internal__.validateExpression = function(expression, locals, globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
@@ -485,7 +486,7 @@
 							};
 						}));
 						
-					initSafeEval.call(__Internal__, global.eval);
+					initSafeEval.call(__Internal__, _shared.Natives.windowEval);
 
 					safeEval.ADD('createEval', __Internal__.createEval);
 					safeEval.ADD('createStrictEval', __Internal__.createStrictEval);
