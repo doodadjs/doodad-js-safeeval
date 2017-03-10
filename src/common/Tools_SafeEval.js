@@ -38,7 +38,7 @@
 					// Get namespaces
 					//===================================
 						
-					var doodad = root.Doodad,
+					const doodad = root.Doodad,
 						types = doodad.Types,
 						tools = doodad.Tools,
 						locale = tools.Locale,
@@ -49,7 +49,7 @@
 					// Internal
 					//===================================
 						
-					var __Internal__ = {
+					const __Internal__ = {
 					};
 					
 					
@@ -66,7 +66,7 @@
 						// TODO: Escape sequences
 						// TODO: String templates
 						
-						var prevChr = '',
+						let prevChr = '',
 							isString = false,
 							isEscape = false,
 							stringChar = null,
@@ -77,15 +77,15 @@
 							tokenName = '',
 							isGlobal = true,
 							isDot = false,
-							deniedTokens = [],
 							isFunction = false,
+							deniedTokens = [],
 							functionArgs = [],
 							brakets = 0,
 							waitArgs = false,
 							parentheses = 0,
-							isShift = false,
+							isShift = false;
 
-							maxSafeInteger = types.getSafeIntegerBounds().max;
+						const maxSafeInteger = types.getSafeIntegerBounds().max;
 							
 						function validateToken() {
 							if (tokenName) {
@@ -122,9 +122,9 @@
 							};
 						};
 
-						var curLocale = locale.getCurrent();
+						const curLocale = locale.getCurrent();
 						
-						var chr = unicode.nextChar(expression);
+						let chr = unicode.nextChar(expression);
 						while (chr) {
 							if (isString) {
 								if (isEscape) {
@@ -387,7 +387,7 @@
 							
 							__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
 							
-							var evalFn = __Internal__.createEvalFn(locals, globals);
+							const evalFn = __Internal__.createEvalFn(locals, globals);
 							
 							return evalFn(expression);
 						}));
@@ -449,11 +449,11 @@
 								root.DD_ASSERT(types.isNothing(globals) || types.isArray(globals), "Invalid globals.");
 							};
 							
-							var evalFn = evalCacheObject[__Internal__.symbolCachedSafeEvalFn];
+							let evalFn = evalCacheObject[__Internal__.symbolCachedSafeEvalFn];
 							if (evalFn) {
 								locals = evalCacheObject[__Internal__.symbolCachedSafeEvalLocals];
 								globals = evalCacheObject[__Internal__.symbolCachedSafeEvalGlobals];
-								var options = evalCacheObject[__Internal__.symbolCachedSafeEvalOptions];
+								const options = evalCacheObject[__Internal__.symbolCachedSafeEvalOptions];
 								preventAssignment = options[0];
 								allowFunctions = options[1];
 							} else {

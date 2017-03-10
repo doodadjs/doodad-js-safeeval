@@ -39,7 +39,7 @@ module.exports = {
 				run: function run(root, /*optional*/options) {
 					"use strict";
 
-					var doodad = root.Doodad,
+					const doodad = root.Doodad,
 						types = doodad.Types,
 						tools = doodad.Tools,
 						namespaces = doodad.Namespaces,
@@ -57,10 +57,14 @@ module.exports = {
 					global.a = 1;
 					global.b = 2;
 
-					var stream = test.getOutput(),
-						html = (stream instanceof io.HtmlOutputStream);
+					const stream = test.getOutput(),
+						html = (types._instanceof(stream, io.HtmlOutputStream));
 					
-					var command = test.prepareCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval");
+
+					let command;
+
+
+					command = test.prepareCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval");
 					
 					if (html) {
 						stream.openElement({tag: 'div', attrs: 'class="allowed"'});
