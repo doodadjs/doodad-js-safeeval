@@ -105,8 +105,8 @@ module.exports = {
 					command.run(true, {},			/**/ "true && !false");
 					command.run('hello;', {},		/**/ "'hello;'");
 					command.run('var', {},			/**/ "'var'");
-					command.run(Date, {mode: 'is'}, /**/ "new Date", null, ['new', 'Date']);
-					command.run(Date, {mode: 'is'}, /**/ "new Date()", null, ['new', 'Date']);
+					command.run(Date, {mode: 'is'}, /**/ "new Date", null, ['Date'], {allowNew: true});
+					command.run(Date, {mode: 'is'}, /**/ "new Date()", null, ['Date'], {allowNew: true});
 					command.run(1, {},				/**/ "value", {value: 1});
 					command.run(16, {},			/**/ "0x10");
 					command.run(17, {},			/**/ "0x10+1");

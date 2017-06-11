@@ -62,10 +62,20 @@
 					});
 					
 					
-					__Internal__.validateExpression = function(expression, locals, globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
+					__Internal__.validateExpression = function(expression, locals, globals, options) {
 						// TODO: Escape sequences
 						// TODO: String templates
 						
+						const preventAssignment = types.get(options, 'preventAssignment', true),
+							allowFunctions = types.get(options, 'allowFunctions', false),
+							allowNew = types.get(options, 'allowNew', false);
+
+						if (root.DD_ASSERT) {
+							root.DD_ASSERT(types.isString(expression), "Invalid expression.");
+							root.DD_ASSERT(types.isNothing(locals) || types.isJsObject(locals), "Invalid locals.");
+							root.DD_ASSERT(types.isNothing(globals) || types.isArray(globals), "Invalid globals.");
+						};
+
 						let prevChr = '',
 							isString = false,
 							isEscape = false,
@@ -93,6 +103,8 @@
 									if (tools.indexOf(__Internal__.deniedTokens, tokenName) >= 0) {
 										throw new types.AccessDenied("Access to '~0~' is denied.", [tokenName]);
 									} else if (__Internal__.allDigitsRegEx.test(tokenName)) {
+										// Valid
+									} else if (allowNew && (tokenName === 'new')) {
 										// Valid
 									} else if (tools.indexOf(__Internal__.constants, tokenName) >= 0) {
 										// Valid
@@ -336,7 +348,7 @@
 						//! REPLACE_IF(IS_UNSET('debug'), "null")
 						{
 								author: "Claude Petit",
-								revision: 7,
+								revision: 8,
 								params: {
 									expression: {
 										type: 'string',
@@ -353,39 +365,36 @@
 										optional: true,
 										description: "List of allowed global variables.",
 									},
-									preventAssignment: {
-										type: 'boolean',
+									options: {
+										type: 'object',
 										optional: true,
-										description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
-									},
-									allowFunctions: {
-										type: 'boolean',
-										optional: true,
-										description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function delcarations. Otherwise, it will prevent them. Default is 'false'.",
+										description: "Options.",
+											/* TODO: Document them somewhere
+												preventAssignment: {
+													type: 'boolean',
+													optional: true,
+													description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
+												},
+												allowFunctions: {
+													type: 'boolean',
+													optional: true,
+													description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function delcarations. Otherwise, it will prevent them. Default is 'false'.",
+												},
+											*/
 									},
 								},
 								returns: 'any',
 								description: "Evaluates a Javascript expression with some restrictions.",
 						}
 						//! END_REPLACE()
-						, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
+						, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
 							// NOTE: Caller functions should use "safeEvalCached" for performance issues (only when expressions are controlled and limited)
 							
 							// Restrict access to locals (locals={...}) and globals (globals=[...]).
 							// Prevents access to my local variables and arguments.
 							// Optionally prevents assignments and increments
 							
-							if (root.DD_ASSERT) {
-								root.DD_ASSERT(types.isString(expression), "Invalid expression.");
-								root.DD_ASSERT(types.isNothing(locals) || types.isJsObject(locals), "Invalid locals.");
-								root.DD_ASSERT(types.isNothing(globals) || types.isArray(globals), "Invalid globals.");
-							};
-
-							if (types.isNothing(preventAssignment)) {
-								preventAssignment = true;
-							};
-							
-							__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
+							__Internal__.validateExpression(expression, locals, globals, options);
 							
 							const evalFn = __Internal__.createEvalFn(locals, globals);
 							
@@ -393,15 +402,13 @@
 						}));
 					
 					__Internal__.symbolCachedSafeEvalFn = types.getSymbol('__SAFE_EVAL_FN__');
-					__Internal__.symbolCachedSafeEvalLocals = types.getSymbol('__SAFE_EVAL_LOCALS__');
-					__Internal__.symbolCachedSafeEvalGlobals = types.getSymbol('__SAFE_EVAL_GLOBALS__');
 					__Internal__.symbolCachedSafeEvalOptions = types.getSymbol('__SAFE_EVAL_OPTIONS__');
 
 					safeEval.ADD('evalCached', root.DD_DOC(
 						//! REPLACE_IF(IS_UNSET('debug'), "null")
 						{
 								author: "Claude Petit",
-								revision: 3,
+								revision: 4,
 								params: {
 									evalCacheObject: {
 										type: 'object',
@@ -413,76 +420,57 @@
 										optional: false,
 										description: "An expression",
 									},
-									locals: {
+									options: {
 										type: 'object',
 										optional: true,
-										description: "Local variables.",
-									},
-									globals: {
-										type: 'arrayof(string)',
-										optional: true,
-										description: "List of allowed global variables.",
-									},
-									preventAssignment: {
-										type: 'boolean',
-										optional: true,
-										description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
-									},
-									allowFunctions: {
-										type: 'boolean',
-										optional: true,
-										description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function delcarations. Otherwise, it will prevent them. Default is 'false'.",
+										description: "Options.",
 									},
 								},
 								returns: 'any',
 								description: "Evaluates a Javascript expression with some restrictions, with cache.",
 						}
 						//! END_REPLACE()
-						, function safeEvalCached(evalCacheObject, expression, /*optional*/locals, /*optional*/globals, /*optional*/preventAssignment, /*optional*/allowFunctions) {
+						, function safeEvalCached(evalCacheObject, expression, /*optional*/options) {
 							// WARNING: If expressions are not controlled and limited, don't use this function because of memory overhead
 							// WARNING: Will always uses the same options for the same cache object
 							
 							if (root.DD_ASSERT) {
 								root.DD_ASSERT(types.isJsObject(evalCacheObject), "Invalid cache object.");
 								root.DD_ASSERT(types.isString(expression), "Invalid expression.");
-								root.DD_ASSERT(types.isNothing(locals) || types.isJsObject(locals), "Invalid locals.");
-								root.DD_ASSERT(types.isNothing(globals) || types.isArray(globals), "Invalid globals.");
 							};
+
+							let locals = null,
+								globals = null;
 							
 							let evalFn = evalCacheObject[__Internal__.symbolCachedSafeEvalFn];
+
 							if (evalFn) {
-								locals = evalCacheObject[__Internal__.symbolCachedSafeEvalLocals];
-								globals = evalCacheObject[__Internal__.symbolCachedSafeEvalGlobals];
-								const options = evalCacheObject[__Internal__.symbolCachedSafeEvalOptions];
-								preventAssignment = options[0];
-								allowFunctions = options[1];
+								options = evalCacheObject[__Internal__.symbolCachedSafeEvalOptions];
+								locals = types.get(options, 'locals');
+								globals = types.get(options, 'globals');
 							} else {
-								if (types.isNothing(preventAssignment)) {
-									preventAssignment = true;
-								};
-								locals = locals && types.freezeObject(types.clone(locals));
-								_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalLocals, locals, {});
-								globals = globals && types.freezeObject(types.clone(globals));
-								_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalGlobals, globals, {});
-								_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, types.freezeObject([preventAssignment, allowFunctions]), {});
+								locals = types.freezeObject(types.clone(types.get(options, 'locals')));
+								globals = types.freezeObject(types.clone(types.get(options, 'globals')));
+								options = types.freezeObject(types.extend({}, options, {locals: locals, globals: globals}));
 								evalFn = __Internal__.createEvalFn(locals, globals);
 								_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
+								_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
 							};
 							
 							expression = tools.trim(expression);
 
-							if ((expression !== __Internal__.symbolCachedSafeEvalFn) && (expression !== __Internal__.symbolCachedSafeEvalLocals) && (expression !== __Internal__.symbolCachedSafeEvalGlobals) && (expression !== __Internal__.symbolCachedSafeEvalOptions)) {
+							if ((expression !== __Internal__.symbolCachedSafeEvalFn) && (expression !== __Internal__.symbolCachedSafeEvalOptions)) {
 								if ((expression === '__proto__') || (expression === 'constructor')) {
-									__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
+									__Internal__.validateExpression(expression, locals, globals, options);
 									return evalFn(expression);
 								} else if (types.has(evalCacheObject, expression)) {
 									return evalCacheObject[expression];
 								} else {
-									__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
+									__Internal__.validateExpression(expression, locals, globals, options);
 									return evalCacheObject[expression] = evalFn(expression);
 								};
 							} else {
-								__Internal__.validateExpression(expression, locals, globals, preventAssignment, allowFunctions);
+								__Internal__.validateExpression(expression, locals, globals, options);
 							};
 						}));
 						
