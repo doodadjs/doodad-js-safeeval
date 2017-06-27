@@ -100,7 +100,7 @@
 
 						const maxSafeInteger = types.getSafeIntegerBounds().max;
 							
-						function validateToken() {
+						const validateToken = function validateToken() {
 							if (tokenName) {
 								if (isGlobal) {
 									if (tools.indexOf(__Internal__.deniedTokens, tokenName) >= 0) {
@@ -137,6 +137,12 @@
 							};
 						};
 
+						const checkDenied = function checkDenied() {
+							if (deniedTokens.length) {
+								throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+							};
+						}
+
 						const curLocale = locale.getCurrent();
 						
 						let chr = unicode.nextChar(expression);
@@ -151,6 +157,19 @@
 								} else if (chr.chr === stringChar) {
 									// String closure
 									isString = false;
+								};
+							} else if (isRegExp) {
+								// RegExp
+								if (isEscape) {
+									// Escaped char
+									isEscape = false;
+								} else if (chr.chr === '\\') {
+									// Char escape
+									isEscape = true;
+								} else if (chr.chr === '/') {
+									// RegExp closure
+									isRegExp = false;
+									isRegExpFlags = true;
 								};
 							} else if (isCommentBlock) {
 								// Comment block
@@ -177,25 +196,9 @@
 								if (preventAssignment) {
 									throw new types.AccessDenied("Assignment is not allowed.");
 								};
-								if (deniedTokens.length) {
-									throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-								};
+								checkDenied();
 							} else if (isComment && (chr.chr !== '\n') && (chr.chr !== '\r')) {
 								// Statement comment
-							} else if (!isComment && (chr.chr === '\\')) {
-								// For simplicity
-								throw new types.AccessDenied("Escape sequences not allowed.");
-							} else if (isRegExp && (chr.chr === '/')) {
-								isRegExp = false;
-								isRegExpFlags = true;
-							} else if (isRegExp) {
-								// RegExp
-							} else if (isGlobal && (chr.chr === '/')) {
-								if (!allowRegExp) {
-									// For simplicity
-									throw new types.AccessDenied("Regular expressions are not allowed.");
-								};
-								isRegExp = true;
 							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) { // End of statement
 								if (isComment && (chr.chr === ';')) {
 									// ';' is part of the comment
@@ -203,9 +206,7 @@
 									isComment = false;
 									isRegExpFlags = false;
 									validateToken();
-									if (deniedTokens.length) {
-										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-									};
+									checkDenied();
 									if (!isDot || (chr.chr === ';')) {
 										isGlobal = true;
 									};
@@ -216,6 +217,9 @@
 									// Token
 									tokenName += chr.chr;
 								};
+							} else if (chr.chr === '\\') {
+								// For simplicity
+								throw new types.AccessDenied("Escape sequences not allowed.");
 							} else if (chr.codePoint > 0x7F) {
 								// For simplicity
 								throw new types.AccessDenied("Invalid character.");
@@ -231,15 +235,11 @@
 									// Space
 								} else if ((prevChr === '/') && (chr.chr === '/')) {
 									// Begin statement comment
-									if (deniedTokens.length) {
-										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-									};
+									checkDenied();
 									isComment = true;
 								} else if ((prevChr === '/') && (chr.chr === '*')) {
 									// Begin comment block
-									if (deniedTokens.length) {
-										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-									};
+									checkDenied();
 									isCommentBlock = true;
 								} else {
 									// Operational chars
@@ -248,21 +248,15 @@
 									
 									if ((chr.chr === '"') || (chr.chr === "'")) {
 										// Begin String
-										if (deniedTokens.length) {
-											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-										};
+										checkDenied();
 										isString = true;
 										stringChar = chr.chr;
 									} else if (chr.chr === '`') {
 										// For simplicity.
-										if (deniedTokens.length) {
-											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-										};
+										checkDenied();
 										throw new types.AccessDenied("Template strings are denied.");
 									} else if ((chr.chr === '+') || (chr.chr === '-')) {
-										if (deniedTokens.length) {
-											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-										};
+										checkDenied();
 										if (prevChr === chr.chr) {
 											// Increment
 											if (preventAssignment) {
@@ -276,11 +270,17 @@
 										// Potential assignment
 										isAssignment = true
 									} else if (chr.chr === '.') {
-										if (deniedTokens.length) {
-											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-										};
+										checkDenied();
 										isDot = true;
 										isGlobal = false;
+									} else if (chr.chr === '/') {
+										// Begin RegExp
+										if (!allowRegExp) {
+											// For simplicity
+											throw new types.AccessDenied("Regular expressions are not allowed.");
+										};
+										checkDenied();
+										isRegExp = true;
 									} else if (isFunction && (chr.chr === '{')) {
 										if (brakets >= maxSafeInteger) {
 											// Should not happen
@@ -303,9 +303,7 @@
 												};
 												parentheses++;
 											} else {
-												if (deniedTokens.length) {
-													throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-												};
+												checkDenied();
 											};
 										};
 									} else if (chr.chr === ')') {
@@ -316,16 +314,11 @@
 												functionArgs = deniedTokens;
 												deniedTokens = [];
 											} else {
-												if (deniedTokens.length) {
-													throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-												};
+												checkDenied();
 											};
 										};
-									} else if (chr.chr === ',') {
 									} else {
-										if (deniedTokens.length) {
-											throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-										};
+										checkDenied();
 									};
 								};
 							};
@@ -335,9 +328,7 @@
 						
 						validateToken();
 
-						if (deniedTokens.length) {
-							throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
-						};
+						checkDenied();
 					};
 					
 					__Internal__.createEvalFn = function createEvalFn(locals, globals) {
