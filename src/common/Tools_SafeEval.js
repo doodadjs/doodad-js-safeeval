@@ -67,8 +67,9 @@
 						// TODO: String templates
 						
 						const preventAssignment = types.get(options, 'preventAssignment', true),
-							allowFunctions = types.get(options, 'allowFunctions', false),
-							allowNew = types.get(options, 'allowNew', false);
+							allowFunctions = types.get(options, 'allowFunctions', false),  // EXPERIMENTAL
+							allowNew = types.get(options, 'allowNew', false),  // EXPERIMENTAL
+							allowRegExp = types.get(options, 'allowRegExp', false);  // EXPERIMENTAL
 
 						if (root.DD_ASSERT) {
 							root.DD_ASSERT(types.isString(expression), "Invalid expression.");
@@ -83,6 +84,8 @@
 							isAssignment = false,
 							isComment = false,
 							isCommentBlock = false,
+							isRegExp = false,
+							isRegExpFlags = false,
 							escapeSeq = '',
 							tokenName = '',
 							isGlobal = true,
@@ -177,10 +180,28 @@
 								if (deniedTokens.length) {
 									throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
 								};
-							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) {
+							} else if (isComment && (chr.chr !== '\n') && (chr.chr !== '\r')) {
+								// Statement comment
+							} else if (!isComment && (chr.chr === '\\')) {
+								// For simplicity
+								throw new types.AccessDenied("Escape sequences not allowed.");
+							} else if (isRegExp && (chr.chr === '/')) {
+								isRegExp = false;
+								isRegExpFlags = true;
+							} else if (isRegExp) {
+								// RegExp
+							} else if (isGlobal && (chr.chr === '/')) {
+								if (!allowRegExp) {
+									// For simplicity
+									throw new types.AccessDenied("Regular expressions are not allowed.");
+								};
+								isRegExp = true;
+							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) { // End of statement
 								if (isComment && (chr.chr === ';')) {
+									// ';' is part of the comment
 								} else {
 									isComment = false;
+									isRegExpFlags = false;
 									validateToken();
 									if (deniedTokens.length) {
 										throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
@@ -190,22 +211,22 @@
 									};
 									functionArgs = [];
 								};
-							} else if (isComment) {
-								// Statement comment
-							} else if (chr.chr === '\\') {
-								// For simplicity
-								throw new types.AccessDenied("Escape sequences not allowed.");
 							} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
-								// Token
-								tokenName += chr.chr;
+								if (!isRegExpFlags) {
+									// Token
+									tokenName += chr.chr;
+								};
 							} else if (chr.codePoint > 0x7F) {
+								// For simplicity
 								throw new types.AccessDenied("Invalid character.");
 							} else if (chr.chr === ':') {
 								tokenName = '';
+								isRegExpFlags = false;
 							} else {
 								validateToken();
 								isDot = false;
 								isGlobal = true;
+								isRegExpFlags = false;
 								if (unicode.isSpace(chr.chr, curLocale)) {
 									// Space
 								} else if ((prevChr === '/') && (chr.chr === '/')) {
@@ -378,7 +399,17 @@
 												allowFunctions: {
 													type: 'boolean',
 													optional: true,
-													description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function delcarations. Otherwise, it will prevent them. Default is 'false'.",
+													description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function declarations. Otherwise, it will prevent them. Default is 'false'.",
+												},
+												allowNew: {
+													type: 'boolean',
+													optional: true,
+													description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow the 'new' operator. Otherwise, it will prevent it. Default is 'false'.",
+												},
+												allowRegExp: {
+													type: 'boolean',
+													optional: true,
+													description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
 												},
 											*/
 									},
