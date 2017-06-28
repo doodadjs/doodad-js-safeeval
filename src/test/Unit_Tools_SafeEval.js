@@ -118,7 +118,15 @@ module.exports = {
 					command.run(1, {},				/**/ "/*a=1*/a", null, ['a']);
 					command.run(1, {},				/**/ "a/*a=1*/", null, ['a']);
 					command.run(1, {},				/**/ "a//a=1", null, ['a']);
+
+					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/", null, null, {allowRegExp: true});
+					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/g", null, null, {allowRegExp: true});
+					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\./g", null, null, {allowRegExp: true});
+					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
+					command.run(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
+					command.run(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
 					
+
 					if (html) {
 						stream.closeElement();
 						stream.openElement({tag: 'div', attrs: 'class="denied"'});
@@ -156,6 +164,10 @@ module.exports = {
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/*comment*/eval");  // eval is denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval/*comment*/");  // eval is denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval//comment");  // eval is denied
+
+					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
+					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
+					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 					
 					if (html) {
 						stream.closeElement();
