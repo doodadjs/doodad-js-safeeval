@@ -84,6 +84,7 @@
 							isAssignment = false,
 							isComment = false,
 							isCommentBlock = false,
+							isMaybeRegExp = false,
 							isRegExp = false,
 							isRegExpFlags = false,
 							escapeSeq = '',
@@ -200,10 +201,11 @@
 							} else if (isComment && (chr.chr !== '\n') && (chr.chr !== '\r')) {
 								// Statement comment
 							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) { // End of statement
-								if (isComment && (chr.chr === ';')) {
-									// ';' is part of the comment
+								if ((isComment || isMaybeRegExp) && (chr.chr === ';')) {
+									// ';' is part of the comment/regexp
 								} else {
 									isComment = false;
+									isMaybeRegExp = false;
 									isRegExpFlags = false;
 									validateToken();
 									checkDenied();
@@ -212,7 +214,7 @@
 									};
 									functionArgs = [];
 								};
-							} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
+							} else if (!isMaybeRegExp && ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale))) {
 								if (!isRegExpFlags) {
 									// Token
 									tokenName += chr.chr;
@@ -223,7 +225,7 @@
 							} else if (chr.codePoint > 0x7F) {
 								// For simplicity
 								throw new types.AccessDenied("Invalid character.");
-							} else if (chr.chr === ':') {
+							} else if (!isMaybeRegExp && (chr.chr === ':')) {
 								tokenName = '';
 								isRegExpFlags = false;
 							} else {
@@ -231,16 +233,27 @@
 								isDot = false;
 								isGlobal = true;
 								isRegExpFlags = false;
-								if (unicode.isSpace(chr.chr, curLocale)) {
-									// Space
-								} else if ((prevChr === '/') && (chr.chr === '/')) {
+								if (isMaybeRegExp && (chr.chr === '/')) {
 									// Begin statement comment
 									checkDenied();
+									isMaybeRegExp = false;
 									isComment = true;
-								} else if ((prevChr === '/') && (chr.chr === '*')) {
+								} else if (isMaybeRegExp && (chr.chr === '*')) {
 									// Begin comment block
 									checkDenied();
+									isMaybeRegExp = false;
 									isCommentBlock = true;
+								} else if (isMaybeRegExp) {
+									// Begin RegExp
+									if (!allowRegExp) {
+										// For simplicity
+										throw new types.AccessDenied("Regular expressions are not allowed.");
+									};
+									checkDenied();
+									isMaybeRegExp = false;
+									isRegExp = true;
+								} else if (unicode.isSpace(chr.chr, curLocale)) {
+									// Space
 								} else {
 									// Operational chars
 									isAssignment = false;
@@ -274,13 +287,7 @@
 										isDot = true;
 										isGlobal = false;
 									} else if (chr.chr === '/') {
-										// Begin RegExp
-										if (!allowRegExp) {
-											// For simplicity
-											throw new types.AccessDenied("Regular expressions are not allowed.");
-										};
-										checkDenied();
-										isRegExp = true;
+										isMaybeRegExp = true;
 									} else if (isFunction && (chr.chr === '{')) {
 										if (brakets >= maxSafeInteger) {
 											// Should not happen
