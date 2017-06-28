@@ -84,7 +84,6 @@
 							isAssignment = false,
 							isComment = false,
 							isCommentBlock = false,
-							isMaybeRegExp = false,
 							isRegExp = false,
 							isRegExpFlags = false,
 							escapeSeq = '',
@@ -97,7 +96,8 @@
 							brakets = 0,
 							waitArgs = false,
 							parentheses = 0,
-							isShift = false;
+							isShift = false,
+							noPrevChr = false;
 
 						const maxSafeInteger = types.getSafeIntegerBounds().max;
 							
@@ -158,6 +158,7 @@
 								} else if (chr.chr === stringChar) {
 									// String closure
 									isString = false;
+									noPrevChr = true;
 								};
 							} else if (isRegExp) {
 								// RegExp
@@ -171,12 +172,14 @@
 									// RegExp closure
 									isRegExp = false;
 									isRegExpFlags = true;
+									noPrevChr = true;
 								};
 							} else if (isCommentBlock) {
 								// Comment block
 								if ((prevChr === '*') && (chr.chr === '/')) {
 									// End comment block
 									isCommentBlock = false;
+									noPrevChr = true;
 								};
 							} else if (isAssignment && (chr.chr === '>')) {
 								// Arrow function
@@ -200,12 +203,35 @@
 								checkDenied();
 							} else if (isComment && (chr.chr !== '\n') && (chr.chr !== '\r')) {
 								// Statement comment
+							} else if ((prevChr === '/') && (chr.chr === '/')) {
+								// Begin statement comment
+								validateToken();
+								isComment = true;
+							} else if ((prevChr === '/') && (chr.chr === '*')) {
+								// Begin comment block
+								validateToken();
+								isCommentBlock = true;
+							} else if (isGlobal && !tokenName && (prevChr === '/')) {
+								// Begin RegExp
+								if (!allowRegExp) {
+									// For simplicity
+									throw new types.AccessDenied("Regular expressions are not allowed.");
+								};
+								isRegExp = true;
+								if (chr.chr === '\\') {
+									isEscape = true;
+								};
+							} else if (unicode.isSpace(chr.chr, curLocale)) {
+								// Space
+								validateToken();
+								isDot = false;
+								isGlobal = true;
+								isRegExpFlags = false;
 							} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) { // End of statement
-								if ((isComment || isMaybeRegExp) && (chr.chr === ';')) {
-									// ';' is part of the comment/regexp
+								if (isComment && (chr.chr === ';')) {
+									// ';' is part of the comment
 								} else {
 									isComment = false;
-									isMaybeRegExp = false;
 									isRegExpFlags = false;
 									validateToken();
 									checkDenied();
@@ -214,7 +240,7 @@
 									};
 									functionArgs = [];
 								};
-							} else if (!isMaybeRegExp && ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale))) {
+							} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
 								if (!isRegExpFlags) {
 									// Token
 									tokenName += chr.chr;
@@ -225,7 +251,7 @@
 							} else if (chr.codePoint > 0x7F) {
 								// For simplicity
 								throw new types.AccessDenied("Invalid character.");
-							} else if (!isMaybeRegExp && (chr.chr === ':')) {
+							} else if (chr.chr === ':') {
 								tokenName = '';
 								isRegExpFlags = false;
 							} else {
@@ -233,103 +259,81 @@
 								isDot = false;
 								isGlobal = true;
 								isRegExpFlags = false;
-								if (isMaybeRegExp && (chr.chr === '/')) {
-									// Begin statement comment
+								isAssignment = false;
+								isShift = false;
+								if ((chr.chr === '"') || (chr.chr === "'")) {
+									// Begin String
 									checkDenied();
-									isMaybeRegExp = false;
-									isComment = true;
-								} else if (isMaybeRegExp && (chr.chr === '*')) {
-									// Begin comment block
+									isString = true;
+									stringChar = chr.chr;
+								} else if (chr.chr === '`') {
+									// For simplicity.
 									checkDenied();
-									isMaybeRegExp = false;
-									isCommentBlock = true;
-								} else if (isMaybeRegExp) {
-									// Begin RegExp
-									if (!allowRegExp) {
-										// For simplicity
-										throw new types.AccessDenied("Regular expressions are not allowed.");
+									throw new types.AccessDenied("Template strings are denied.");
+								} else if ((chr.chr === '+') || (chr.chr === '-')) {
+									checkDenied();
+									if (prevChr === chr.chr) {
+										// Increment
+										if (preventAssignment) {
+											throw new types.AccessDenied("Increment operators are not allowed.");
+										};
 									};
+								} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
+									// Potential shift assignment
+									isShift = true;
+								} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
+									// Potential assignment
+									isAssignment = true
+								} else if (chr.chr === '.') {
 									checkDenied();
-									isMaybeRegExp = false;
-									isRegExp = true;
-								} else if (unicode.isSpace(chr.chr, curLocale)) {
-									// Space
+									isDot = true;
+									isGlobal = false;
+								} else if (isFunction && (chr.chr === '{')) {
+									if (brakets >= maxSafeInteger) {
+										// Should not happen
+										throw new types.Error("Integer overflow.");
+									};
+									brakets++;
+								} else if (isFunction && (chr.chr === '}')) {
+									brakets--;
+									if (brakets <= 0) {
+										isFunction = false;
+										brakets = 0;
+										functionArgs = [];
+									};
+								} else if (chr.chr === '(') {
+									if (isFunction) {
+										if (waitArgs) {
+											if (parentheses >= maxSafeInteger) {
+												// Should not happen
+												throw new types.Error("Integer overflow.");
+											};
+											parentheses++;
+										} else {
+											checkDenied();
+										};
+									};
+								} else if (chr.chr === ')') {
+									if (isFunction) {
+										if (waitArgs) {
+											waitArgs = false;
+											parentheses = 0;  // can't have more than one parenthese
+											functionArgs = deniedTokens;
+											deniedTokens = [];
+										} else {
+											checkDenied();
+										};
+									};
 								} else {
-									// Operational chars
-									isAssignment = false;
-									isShift = false;
-									
-									if ((chr.chr === '"') || (chr.chr === "'")) {
-										// Begin String
-										checkDenied();
-										isString = true;
-										stringChar = chr.chr;
-									} else if (chr.chr === '`') {
-										// For simplicity.
-										checkDenied();
-										throw new types.AccessDenied("Template strings are denied.");
-									} else if ((chr.chr === '+') || (chr.chr === '-')) {
-										checkDenied();
-										if (prevChr === chr.chr) {
-											// Increment
-											if (preventAssignment) {
-												throw new types.AccessDenied("Increment operators are not allowed.");
-											};
-										};
-									} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
-										// Potential shift assignment
-										isShift = true;
-									} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
-										// Potential assignment
-										isAssignment = true
-									} else if (chr.chr === '.') {
-										checkDenied();
-										isDot = true;
-										isGlobal = false;
-									} else if (chr.chr === '/') {
-										isMaybeRegExp = true;
-									} else if (isFunction && (chr.chr === '{')) {
-										if (brakets >= maxSafeInteger) {
-											// Should not happen
-											throw new types.Error("Integer overflow.");
-										};
-										brakets++;
-									} else if (isFunction && (chr.chr === '}')) {
-										brakets--;
-										if (brakets <= 0) {
-											isFunction = false;
-											brakets = 0;
-											functionArgs = [];
-										};
-									} else if (chr.chr === '(') {
-										if (isFunction) {
-											if (waitArgs) {
-												if (parentheses >= maxSafeInteger) {
-													// Should not happen
-													throw new types.Error("Integer overflow.");
-												};
-												parentheses++;
-											} else {
-												checkDenied();
-											};
-										};
-									} else if (chr.chr === ')') {
-										if (isFunction) {
-											if (waitArgs) {
-												waitArgs = false;
-												parentheses = 0;  // can't have more than one parenthese
-												functionArgs = deniedTokens;
-												deniedTokens = [];
-											} else {
-												checkDenied();
-											};
-										};
-									} else {
-										checkDenied();
-									};
+									checkDenied();
 								};
 							};
-							prevChr = chr.chr;
+							if (noPrevChr) {
+								noPrevChr = false;
+								prevChr = '';
+							} else {
+								prevChr = chr.chr;
+							};
 							chr = chr.nextChar();
 						};
 						
