@@ -61,13 +61,16 @@ module.exports = {
 						html = (types._instanceof(stream, io.HtmlOutputStream));
 					
 
-					let command;
+					let command,
+						task;
 
 
 					command = test.prepareCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval");
 					
 					if (html) {
-						stream.openElement({tag: 'div', attrs: 'class="allowed"'});
+						command.chain(function() {
+							stream.openElement({tag: 'div', attrs: 'class="allowed"'});
+						});
 					};
 					command.run(1, {},				/**/ "1");
 					command.run(0.1, {},			/**/ "0.1");
@@ -124,12 +127,14 @@ module.exports = {
 					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\./g", null, null, {allowRegExp: true});
 					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
 					command.run(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
-					command.run(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
+					task = command.run(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
 					
 
 					if (html) {
-						stream.closeElement();
-						stream.openElement({tag: 'div', attrs: 'class="denied"'});
+						task.chain(function() {
+							stream.closeElement();
+							stream.openElement({tag: 'div', attrs: 'class="denied"'});
+						});
 					};
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
@@ -167,10 +172,12 @@ module.exports = {
 
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
-					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
+					task = command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 					
 					if (html) {
-						stream.closeElement();
+						task.chain(function() {
+							stream.closeElement();
+						});
 					};
 					
 					command.end();
