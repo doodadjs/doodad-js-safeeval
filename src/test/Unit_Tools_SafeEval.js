@@ -127,11 +127,11 @@ module.exports = {
 					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\./g", null, null, {allowRegExp: true});
 					command.run(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
 					command.run(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
-					task = command.run(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
+					command.run(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
 					
 
 					if (html) {
-						task.chain(function() {
+						command.chain(function() {
 							stream.closeElement();
 							stream.openElement({tag: 'div', attrs: 'class="denied"'});
 						});
@@ -172,10 +172,10 @@ module.exports = {
 
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
 					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
-					task = command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
+					command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 					
 					if (html) {
-						task.chain(function() {
+						command.chain(function() {
 							stream.closeElement();
 						});
 					};
