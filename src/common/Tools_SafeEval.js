@@ -59,7 +59,7 @@ module.exports = {
 				// Native functions
 				//===================================
 						
-				//types.complete(_shared.Natives, {
+				//tools.complete(_shared.Natives, {
 				//});
 					
 					
@@ -359,12 +359,12 @@ module.exports = {
 							return locals;
 						}, {});
 							
-						locals = types.nullObject(globals, locals);
+						locals = tools.nullObject(globals, locals);
 							
 						if (types.isEmpty(locals)) {
-							return types.evalStrict;
+							return tools.evalStrict;
 						} else {
-							return types.createEval(types.keys(locals), true).apply(null, types.values(locals));
+							return tools.createEval(types.keys(locals), true).apply(null, types.values(locals));
 						};
 				};
 					
@@ -485,7 +485,7 @@ module.exports = {
 						} else {
 							locals = types.freezeObject(types.clone(types.get(options, 'locals')));
 							globals = types.freezeObject(types.clone(types.get(options, 'globals')));
-							options = types.freezeObject(types.extend({}, options, {locals: locals, globals: globals}));
+							options = types.freezeObject(tools.extend({}, options, {locals: locals, globals: globals}));
 							evalFn = __Internal__.createEvalFn(locals, globals);
 							_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
 							_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
@@ -510,10 +510,10 @@ module.exports = {
 						
 				// Aliases (for compatibility)
 				safeEval.ADD('createEval', function createEval(locals) {
-					return types.createEval(locals, false);
+					return tools.createEval(locals, false);
 				});
 				safeEval.ADD('createStrictEval', function createEval(locals) {
-					return types.createEval(locals, true);
+					return tools.createEval(locals, true);
 				});
 
 				//===================================
