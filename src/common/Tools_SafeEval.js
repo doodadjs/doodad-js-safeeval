@@ -361,9 +361,9 @@ exports.add = function add(DD_MODULES) {
 					locals = tools.nullObject(globals, locals);
 							
 					if (types.isEmpty(locals)) {
-						return tools.evalStrict;
+						return tools.eval;
 					} else {
-						return tools.createEval(types.keys(locals), true).apply(null, types.values(locals));
+						return tools.createEval(types.keys(locals)).apply(null, types.values(locals));
 					};
 			};
 					
