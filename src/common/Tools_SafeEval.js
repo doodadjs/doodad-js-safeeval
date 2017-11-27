@@ -507,13 +507,6 @@ exports.add = function add(DD_MODULES) {
 					};
 				}));
 						
-			// Aliases (for compatibility)
-			safeEval.ADD('createEval', function createEval(locals) {
-				return tools.createEval(locals, false);
-			});
-			safeEval.ADD('createStrictEval', function createEval(locals) {
-				return tools.createEval(locals, true);
-			});
 
 			//===================================
 			// Init
