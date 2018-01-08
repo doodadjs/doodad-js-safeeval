@@ -1,5 +1,5 @@
 {
-  "name": "doodad-js-safeeval",
+  "name": "@doodad-js/safeeval",
   "description": "doodad-js SafeEval (beta)",
   "version": "0.0.0",
   "files": [

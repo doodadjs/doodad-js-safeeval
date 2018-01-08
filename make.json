@@ -27,30 +27,30 @@
 	"version": "4.0.0",
 	"dependencies": [
 		{
-			"name": "doodad-js",
+			"name": "@doodad-js/core",
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
-			"name": "doodad-js-locale",
+			"name": "@doodad-js/locale",
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
-			"name": "doodad-js-unicode",
+			"name": "@doodad-js/unicode",
 			"client": true,
 			"server": true,
 			"browserify": true
 		},
 		{
-			"name": "doodad-js/tests",
+			"name": "@doodad-js/core/tests",
 			"client": true,
 			"server": true,
 			"browserify": true,
 			"test": true,
-			"path": "test/doodad-js_tests.js"
+			"path": "test/core_test.js"
 		}
 	],
 	"modules": [
