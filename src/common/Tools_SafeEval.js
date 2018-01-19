@@ -86,7 +86,6 @@ exports.add = function add(DD_MODULES) {
 					isCommentBlock = false,
 					isRegExp = false,
 					isRegExpFlags = false,
-					escapeSeq = '',
 					tokenName = '',
 					isGlobal = true,
 					isDot = false,
@@ -142,7 +141,7 @@ exports.add = function add(DD_MODULES) {
 					if (deniedTokens.length) {
 						throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
 					};
-				}
+				};
 
 				const curLocale = locale.getCurrent();
 						
@@ -283,7 +282,7 @@ exports.add = function add(DD_MODULES) {
 							isShift = true;
 						} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
 							// Potential assignment
-							isAssignment = true
+							isAssignment = true;
 						} else if (chr.chr === '.') {
 							checkDenied();
 							isDot = true;
@@ -500,11 +499,14 @@ exports.add = function add(DD_MODULES) {
 							return evalCacheObject[expression];
 						} else {
 							__Internal__.validateExpression(expression, locals, globals, options);
-							return evalCacheObject[expression] = evalFn(expression);
+							const result = evalCacheObject[expression] = evalFn(expression);
+							return result;
 						};
 					} else {
 						__Internal__.validateExpression(expression, locals, globals, options);
 					};
+
+					return undefined;
 				}));
 						
 
