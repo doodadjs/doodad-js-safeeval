@@ -18,8 +18,5 @@
     "url": "https://github.com/doodadjs/doodad-js-safeeval/issues",
     "email": "doodadjs@gmail.com"
   },
-  "tonicExampleFilename": "tonic.js",
-  "devDependencies": {
-    "@doodad-js/eslint-config-base": "^1.2.1"
-  }
+  "tonicExampleFilename": "tonic.js"
 }
