@@ -488,8 +488,8 @@ exports.add = function add(DD_MODULES) {
 						globals = types.freezeObject(types.clone(types.get(options, 'globals')));
 						options = types.freezeObject(tools.extend({}, options, {locals: locals, globals: globals}));
 						evalFn = __Internal__.createEvalFn(locals, globals);
-						_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
-						_shared.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
+						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
+						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
 					};
 							
 					expression = tools.trim(expression);
