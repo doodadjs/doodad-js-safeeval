@@ -68,7 +68,7 @@ exports.add = function add(DD_MODULES) {
 					
 				if (html) {
 					command.chain(function() {
-						stream.openElement({tag: 'div', attrs: 'class="allowed"'});
+						stream.openElement({tag: 'div', attrs: {"class": 'allowed'}});
 					});
 				};
 				command.run(1, {},				/**/ "1");
@@ -132,7 +132,7 @@ exports.add = function add(DD_MODULES) {
 				if (html) {
 					command.chain(function() {
 						stream.closeElement();
-						stream.openElement({tag: 'div', attrs: 'class="denied"'});
+						stream.openElement({tag: 'div', attrs: {"class": 'denied'}});
 					});
 				};
 				command.run(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
