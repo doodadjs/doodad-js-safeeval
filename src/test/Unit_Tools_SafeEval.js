@@ -24,9 +24,9 @@
 //	limitations under the License.
 //! END_REPLACE()
 
-exports.add = function add(DD_MODULES) {
-	DD_MODULES = (DD_MODULES || {});
-	DD_MODULES['Doodad.Test.Tools.SafeEval'] = {
+exports.add = function add(modules) {
+	modules = (modules || {});
+	modules['Doodad.Test.Tools.SafeEval'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
 		type: 'TestModule',
 		dependencies: ['Doodad.Test.Tools'],
@@ -184,7 +184,7 @@ exports.add = function add(DD_MODULES) {
 			},
 		},
 	};
-	return DD_MODULES;
+	return modules;
 };
 
 //! END_MODULE()
