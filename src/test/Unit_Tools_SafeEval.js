@@ -65,11 +65,11 @@ exports.add = function add(modules) {
 					const stream = test.getOutput(),
 						html = types._instanceof(stream, io.HtmlOutputStream);
 						
-					command.chain(function() {
-						if (html) {
+					if (html) {
+						command.chain(function() {
 							stream.openElement({tag: 'div', attrs: {"class": 'allowed'}});
-						};
-					});
+						});
+					};
 
 					command.runStep(1, {},				/**/ "1");
 					command.runStep(0.1, {},			/**/ "0.1");
@@ -128,12 +128,12 @@ exports.add = function add(modules) {
 					command.runStep(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
 					command.runStep(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
 						
-					command.chain(function() {
-						if (html) {
+					if (html) {
+						command.chain(function() {
 							stream.closeElement();
 							stream.openElement({tag: 'div', attrs: {"class": 'denied'}});
-						};
-					});
+						});
+					};
 
 					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
 					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
@@ -173,11 +173,11 @@ exports.add = function add(modules) {
 					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
 					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 						
-					command.chain(function() {
-						if (html) {
+					if (html) {
+						command.chain(function() {
 							stream.closeElement();
-						};
-					});
+						});
+					};
 
 					command.chain(function() {
 						if (hasA) {
