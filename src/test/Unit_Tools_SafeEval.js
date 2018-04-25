@@ -55,139 +55,121 @@ exports.add = function add(modules) {
 				
 				test.runCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval", function(command, options) {
 					const hasA = types.has(global, 'a'),
-						a = global.a,
+						oldA = global.a,
 						hasB = types.has(global, 'b'),
-						b = global.b;
+						oldB = global.b;
 
 					global.a = 1;
 					global.b = 2;
 
-					const stream = test.getOutput(),
-						html = types._instanceof(stream, io.HtmlOutputStream);
+					command.runGroup("Allowed", function(group, options) {
+						group.runStep(1, {},				/**/ "1");
+						group.runStep(0.1, {},			/**/ "0.1");
+						group.runStep(0.1, {},			/**/ ".1");
+						group.runStep(1, {},				/**/ "+1");
+						group.runStep(-1, {},			    /**/ "-1");
+						group.runStep(-1, {},			    /**/ "+-1");
+						group.runStep(-1, {},			    /**/ "-+1");
+						group.runStep('hello', {},		/**/ "'hello'");
+						group.runStep("hello 'sir'", {},	/**/ "'hello \\'sir\\''");
+						group.runStep('a=1', {},			/**/ "'a=1'");
+						group.runStep("a=1,'b=2'", {},	/**/ "'a=1,\\'b=2\\''");
+						group.runStep(1, {},				/**/ "a", null, ['a']);
+						group.runStep(1, {},				/**/ "(a)", null, ['a']);
+						group.runStep(true, {},			/**/ "a==1", null, ['a']);
+						group.runStep(true, {},			/**/ "a == 1", null, ['a']);
+						group.runStep(true, {},			/**/ "a== 1", null, ['a']);
+						group.runStep(true, {},			/**/ "a ==1", null, ['a']);
+						group.runStep(true, {},			/**/ "a  ==1", null, ['a']);
+						group.runStep(true, {},			/**/ "a  ==  1", null, ['a']);
+						group.runStep(false, {},			/**/ "a!=1", null, ['a']);
+						group.runStep(true, {},			/**/ "a===1", null, ['a']);
+						group.runStep(false, {},			/**/ "a!==1", null, ['a']);
+						group.runStep(2, {},				/**/ "a+1", null, ['a']);
+						group.runStep(2, {},				/**/ "1+1");
+						group.runStep(2, {},				/**/ "1 + 1");
+						group.runStep(2, {},				/**/ "1 +1");
+						group.runStep(2, {},				/**/ "1+ 1");
+						group.runStep(2, {},				/**/ "1+(1)");
+						group.runStep(2, {},				/**/ "(1+1)");
+						group.runStep(true, {},			/**/ "(1+1)==2");
+						group.runStep(true, {},			/**/ "(1+1)===2");
+						group.runStep(true, {},			/**/ "true");  // true is a constant, not a globsl
+						group.runStep(false, {},			/**/ "!true");
+						group.runStep(true, {},			/**/ "true && !false");
+						group.runStep('hello;', {},		/**/ "'hello;'");
+						group.runStep('var', {},			/**/ "'var'");
+						group.runStep(Date, {mode: 'is'}, /**/ "new Date", null, ['Date'], {allowNew: true});
+						group.runStep(Date, {mode: 'is'}, /**/ "new Date()", null, ['Date'], {allowNew: true});
+						group.runStep(1, {},				/**/ "value", {value: 1});
+						group.runStep(16, {},			/**/ "0x10");
+						group.runStep(17, {},			/**/ "0x10+1");
+						group.runStep(17, {},			/**/ "0x10 + 1");
+						group.runStep(2, {note: "May fail under MS Internet Explorer, Safari and Nodejs because binary number constants are not supported."},				/**/ "0b10");  // Firefox Nightly
+						group.runStep(8, {note: "May fail under MS Internet Explorer, Safari and Nodejs because octal number constants are not supported."},				/**/ "0o10");  // Firefox Nightly
+
+						group.runStep(1, {},				/**/ "/*eval*/a", null, ['a']);
+						group.runStep(1, {},				/**/ "/*a=1*/a", null, ['a']);
+						group.runStep(1, {},				/**/ "a/*a=1*/", null, ['a']);
+						group.runStep(1, {},				/**/ "a//a=1", null, ['a']);
+
+						group.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/", null, null, {allowRegExp: true});
+						group.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/g", null, null, {allowRegExp: true});
+						group.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/\\./g", null, null, {allowRegExp: true});
+						group.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
+						group.runStep(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
+						group.runStep(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
+					});
 						
-					if (html) {
-						command.chain(function() {
-							stream.openElement({tag: 'div', attrs: {"class": 'allowed'}});
-						});
-					};
+					command.runGroup("Denied", function(group, options) {
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=+1", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=-1", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=b", null, ['a','b']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1;", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a)=1", null, ['a']); // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a = 1", null, ['a']); // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a= 1", null, ['a']);  // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a =1", null, ['a']);  // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=  1", null, ['a']); // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a  =1", null, ['a']); // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a+=1", null, ['a']);  // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a+='hello'", null, ['a']);   // assignment denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a++", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a--", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a ++", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "++a", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "--a", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "++ a", null, ['a']);   // incrementation denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "this");  // local variables of safeEval are denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "expression");  // local variables of safeEval are denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval('1')");   // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "window"); // window is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a"); // 'a' is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "document"); // 'document' is denied
 
-					command.runStep(1, {},				/**/ "1");
-					command.runStep(0.1, {},			/**/ "0.1");
-					command.runStep(0.1, {},			/**/ ".1");
-					command.runStep(1, {},				/**/ "+1");
-					command.runStep(-1, {},			    /**/ "-1");
-					command.runStep(-1, {},			    /**/ "+-1");
-					command.runStep(-1, {},			    /**/ "-+1");
-					command.runStep('hello', {},		/**/ "'hello'");
-					command.runStep("hello 'sir'", {},	/**/ "'hello \\'sir\\''");
-					command.runStep('a=1', {},			/**/ "'a=1'");
-					command.runStep("a=1,'b=2'", {},	/**/ "'a=1,\\'b=2\\''");
-					command.runStep(1, {},				/**/ "a", null, ['a']);
-					command.runStep(1, {},				/**/ "(a)", null, ['a']);
-					command.runStep(true, {},			/**/ "a==1", null, ['a']);
-					command.runStep(true, {},			/**/ "a == 1", null, ['a']);
-					command.runStep(true, {},			/**/ "a== 1", null, ['a']);
-					command.runStep(true, {},			/**/ "a ==1", null, ['a']);
-					command.runStep(true, {},			/**/ "a  ==1", null, ['a']);
-					command.runStep(true, {},			/**/ "a  ==  1", null, ['a']);
-					command.runStep(false, {},			/**/ "a!=1", null, ['a']);
-					command.runStep(true, {},			/**/ "a===1", null, ['a']);
-					command.runStep(false, {},			/**/ "a!==1", null, ['a']);
-					command.runStep(2, {},				/**/ "a+1", null, ['a']);
-					command.runStep(2, {},				/**/ "1+1");
-					command.runStep(2, {},				/**/ "1 + 1");
-					command.runStep(2, {},				/**/ "1 +1");
-					command.runStep(2, {},				/**/ "1+ 1");
-					command.runStep(2, {},				/**/ "1+(1)");
-					command.runStep(2, {},				/**/ "(1+1)");
-					command.runStep(true, {},			/**/ "(1+1)==2");
-					command.runStep(true, {},			/**/ "(1+1)===2");
-					command.runStep(true, {},			/**/ "true");  // true is a constant, not a globsl
-					command.runStep(false, {},			/**/ "!true");
-					command.runStep(true, {},			/**/ "true && !false");
-					command.runStep('hello;', {},		/**/ "'hello;'");
-					command.runStep('var', {},			/**/ "'var'");
-					command.runStep(Date, {mode: 'is'}, /**/ "new Date", null, ['Date'], {allowNew: true});
-					command.runStep(Date, {mode: 'is'}, /**/ "new Date()", null, ['Date'], {allowNew: true});
-					command.runStep(1, {},				/**/ "value", {value: 1});
-					command.runStep(16, {},			/**/ "0x10");
-					command.runStep(17, {},			/**/ "0x10+1");
-					command.runStep(17, {},			/**/ "0x10 + 1");
-					command.runStep(2, {note: "May fail under MS Internet Explorer, Safari and Nodejs because binary number constants are not supported."},				/**/ "0b10");  // Firefox Nightly
-					command.runStep(8, {note: "May fail under MS Internet Explorer, Safari and Nodejs because octal number constants are not supported."},				/**/ "0o10");  // Firefox Nightly
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi !`");  // Templates are denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi ${'you'} !`");  // Templates are denied
+								
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/*comment*/eval");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval/*comment*/");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval//comment");  // eval is denied
 
-					command.runStep(1, {},				/**/ "/*eval*/a", null, ['a']);
-					command.runStep(1, {},				/**/ "/*a=1*/a", null, ['a']);
-					command.runStep(1, {},				/**/ "a/*a=1*/", null, ['a']);
-					command.runStep(1, {},				/**/ "a//a=1", null, ['a']);
-
-					command.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/", null, null, {allowRegExp: true});
-					command.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/hello/g", null, null, {allowRegExp: true});
-					command.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/\\./g", null, null, {allowRegExp: true});
-					command.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
-					command.runStep(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
-					command.runStep(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
+					});
 						
-					if (html) {
-						command.chain(function() {
-							stream.closeElement();
-							stream.openElement({tag: 'div', attrs: {"class": 'denied'}});
-						});
-					};
-
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=+1", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=-1", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=b", null, ['a','b']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1;", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a)=1", null, ['a']); // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a = 1", null, ['a']); // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a= 1", null, ['a']);  // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a =1", null, ['a']);  // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=  1", null, ['a']); // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a  =1", null, ['a']); // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a+=1", null, ['a']);  // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a+='hello'", null, ['a']);   // assignment denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a++", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a--", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a ++", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "++a", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "--a", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "++ a", null, ['a']);   // incrementation denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "this");  // local variables of safeEval are denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "expression");  // local variables of safeEval are denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval('1')");   // eval is denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "window"); // window is denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a"); // 'a' is denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "document"); // 'document' is denied
-
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi !`");  // Templates are denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi ${'you'} !`");  // Templates are denied
-							
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/*comment*/eval");  // eval is denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval/*comment*/");  // eval is denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval//comment");  // eval is denied
-
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
-					command.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
-						
-					if (html) {
-						command.chain(function() {
-							stream.closeElement();
-						});
-					};
-
-					command.chain(function() {
+					command.finalize(function(err, dummy) {
 						if (hasA) {
-							global.a = a;
+							global.a = oldA;
 						} else {
 							delete global.a;
 						};
 						
 						if (hasB) {
-							global.b = b;
+							global.b = oldB;
 						} else {
 							delete global.b;
 						};
