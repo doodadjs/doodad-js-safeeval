@@ -33,42 +33,42 @@ exports.add = function add(modules) {
 	modules = (modules || {});
 	modules['Doodad.Tools.SafeEval'] = {
 		version: /*! REPLACE_BY(TO_SOURCE(VERSION(MANIFEST("name")))) */ null /*! END_REPLACE()*/,
-		
+
 		create: function create(root, /*optional*/_options, _shared) {
 			//===================================
 			// Get namespaces
 			//===================================
-						
+
 			const doodad = root.Doodad,
 				types = doodad.Types,
 				tools = doodad.Tools,
 				locale = tools.Locale,
 				unicode = tools.Unicode,
 				safeEval = tools.SafeEval;
-						
+
 			//===================================
 			// Internal
 			//===================================
-						
+
 			const __Internal__ = {
 				deniedTokens: ['eval', 'arguments', 'this'],
 				constants: ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'],
 				allDigitsRegEx: /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/,
 			};
-					
-					
+
+
 			//===================================
 			// Native functions
 			//===================================
-						
+
 			//tools.complete(_shared.Natives, {
 			//});
-					
-					
+
+
 			__Internal__.validateExpression = function(expression, locals, globals, options) {
 				// TODO: Escape sequences
 				// TODO: String templates
-						
+
 				const preventAssignment = types.get(options, 'preventAssignment', true),
 					allowFunctions = types.get(options, 'allowFunctions', false),  // EXPERIMENTAL
 					allowNew = types.get(options, 'allowNew', false),  // EXPERIMENTAL
@@ -102,7 +102,7 @@ exports.add = function add(modules) {
 					noPrevChr = false;
 
 				const maxSafeInteger = types.getSafeIntegerBounds().max;
-							
+
 				const validateToken = function validateToken() {
 					if (tokenName) {
 						if (isGlobal) {
@@ -147,7 +147,7 @@ exports.add = function add(modules) {
 				};
 
 				const curLocale = locale.getCurrent();
-						
+
 				let chr = unicode.nextChar(expression);
 				while (chr) {
 					if (isString) {
@@ -338,12 +338,12 @@ exports.add = function add(modules) {
 					};
 					chr = chr.nextChar();
 				};
-						
+
 				validateToken();
 
 				checkDenied();
 			};
-					
+
 			__Internal__.createEvalFn = function createEvalFn(locals, globals) {
 					root.DD_ASSERT && root.DD_ASSERT(types.isNothing(locals) || types.isObject(locals), "Invalid locals object.");
 
@@ -352,23 +352,23 @@ exports.add = function add(modules) {
 					} else {
 						root.DD_ASSERT && root.DD_ASSERT(types.isArray(globals), "Invalid global names array.");
 					};
-							
+
 					globals = tools.reduce(globals, function(locals, name) {
 						if (name in global) {
 							locals[name] = global[name];
 						};
 						return locals;
 					}, {});
-							
+
 					locals = tools.nullObject(globals, locals);
-							
+
 					if (types.isEmpty(locals)) {
 						return tools.eval;
 					} else {
 						return tools.createEval(types.keys(locals)).apply(null, types.values(locals));
 					};
 			};
-					
+
 			safeEval.ADD('eval', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 				{
@@ -424,18 +424,18 @@ exports.add = function add(modules) {
 				//! END_REPLACE()
 				, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
 					// NOTE: Caller functions should use "safeEvalCached" for performance issues (only when expressions are controlled and limited)
-							
+
 					// Restrict access to locals (locals={...}) and globals (globals=[...]).
 					// Prevents access to my local variables and arguments.
 					// Optionally prevents assignments and increments
-							
+
 					__Internal__.validateExpression(expression, locals, globals, options);
-							
+
 					const evalFn = __Internal__.createEvalFn(locals, globals);
-							
+
 					return evalFn(expression);
 				}));
-					
+
 			__Internal__.symbolCachedSafeEvalFn = types.getSymbol('__SAFE_EVAL_FN__');
 			__Internal__.symbolCachedSafeEvalOptions = types.getSymbol('__SAFE_EVAL_OPTIONS__');
 
@@ -468,7 +468,7 @@ exports.add = function add(modules) {
 				, function safeEvalCached(evalCacheObject, expression, /*optional*/options) {
 					// WARNING: If expressions are not controlled and limited, don't use this function because of memory overhead
 					// WARNING: Will always uses the same options for the same cache object
-							
+
 					if (root.DD_ASSERT) {
 						root.DD_ASSERT(types.isJsObject(evalCacheObject), "Invalid cache object.");
 						root.DD_ASSERT(types.isString(expression), "Invalid expression.");
@@ -476,7 +476,7 @@ exports.add = function add(modules) {
 
 					let locals = null,
 						globals = null;
-							
+
 					let evalFn = evalCacheObject[__Internal__.symbolCachedSafeEvalFn];
 
 					if (evalFn) {
@@ -491,7 +491,7 @@ exports.add = function add(modules) {
 						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
 						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
 					};
-							
+
 					expression = tools.trim(expression);
 
 					if ((expression !== __Internal__.symbolCachedSafeEvalFn) && (expression !== __Internal__.symbolCachedSafeEvalOptions)) {
@@ -511,7 +511,7 @@ exports.add = function add(modules) {
 
 					return undefined;
 				}));
-						
+
 
 			//===================================
 			// Init
