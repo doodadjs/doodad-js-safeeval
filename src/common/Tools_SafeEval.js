@@ -4,7 +4,7 @@
 // doodad-js - Object-oriented programming framework
 // File: Tools_SafeEval.js - SafeEval tools
 // Project home: https://github.com/doodadjs/
-	// Author: Claude Petit, Quebec city
+// Author: Claude Petit, Quebec city
 // Contact: doodadjs [at] gmail.com
 // Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
 // License: Apache V2
@@ -26,7 +26,7 @@
 
 //! IF_SET("mjs")
 //! ELSE()
-	"use strict";
+"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -345,56 +345,56 @@ exports.add = function add(modules) {
 			};
 
 			__Internal__.createEvalFn = function createEvalFn(locals, globals) {
-					root.DD_ASSERT && root.DD_ASSERT(types.isNothing(locals) || types.isObject(locals), "Invalid locals object.");
+				root.DD_ASSERT && root.DD_ASSERT(types.isNothing(locals) || types.isObject(locals), "Invalid locals object.");
 
-					if (types.isNothing(globals)) {
-						globals = [];
-					} else {
-						root.DD_ASSERT && root.DD_ASSERT(types.isArray(globals), "Invalid global names array.");
+				if (types.isNothing(globals)) {
+					globals = [];
+				} else {
+					root.DD_ASSERT && root.DD_ASSERT(types.isArray(globals), "Invalid global names array.");
+				};
+
+				globals = tools.reduce(globals, function(locals, name) {
+					if (name in global) {
+						locals[name] = global[name];
 					};
+					return locals;
+				}, {});
 
-					globals = tools.reduce(globals, function(locals, name) {
-						if (name in global) {
-							locals[name] = global[name];
-						};
-						return locals;
-					}, {});
+				locals = tools.nullObject(globals, locals);
 
-					locals = tools.nullObject(globals, locals);
-
-					if (types.isEmpty(locals)) {
-						return tools.eval;
-					} else {
-						return tools.createEval(types.keys(locals)).apply(null, types.values(locals));
-					};
+				if (types.isEmpty(locals)) {
+					return tools.eval;
+				} else {
+					return tools.createEval(types.keys(locals)).apply(null, types.values(locals));
+				};
 			};
 
 			safeEval.ADD('eval', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 				{
-						author: "Claude Petit",
-						revision: 8,
-						params: {
-							expression: {
-								type: 'string',
-								optional: false,
-								description: "An expression",
-							},
-							locals: {
-								type: 'object',
-								optional: true,
-								description: "Local variables.",
-							},
-							globals: {
-								type: 'arrayof(string)',
-								optional: true,
-								description: "List of allowed global variables.",
-							},
-							options: {
-								type: 'object',
-								optional: true,
-								description: "Options.",
-									/* TODO: Document them somewhere
+					author: "Claude Petit",
+					revision: 8,
+					params: {
+						expression: {
+							type: 'string',
+							optional: false,
+							description: "An expression",
+						},
+						locals: {
+							type: 'object',
+							optional: true,
+							description: "Local variables.",
+						},
+						globals: {
+							type: 'arrayof(string)',
+							optional: true,
+							description: "List of allowed global variables.",
+						},
+						options: {
+							type: 'object',
+							optional: true,
+							description: "Options.",
+							/* TODO: Document them somewhere
 										preventAssignment: {
 											type: 'boolean',
 											optional: true,
@@ -416,10 +416,10 @@ exports.add = function add(modules) {
 											description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
 										},
 									*/
-							},
 						},
-						returns: 'any',
-						description: "Evaluates a Javascript expression with some restrictions.",
+					},
+					returns: 'any',
+					description: "Evaluates a Javascript expression with some restrictions.",
 				}
 				//! END_REPLACE()
 				, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
@@ -442,27 +442,27 @@ exports.add = function add(modules) {
 			safeEval.ADD('evalCached', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 				{
-						author: "Claude Petit",
-						revision: 4,
-						params: {
-							evalCacheObject: {
-								type: 'object',
-								optional: false,
-								description: "An object to use as cache",
-							},
-							expression: {
-								type: 'string',
-								optional: false,
-								description: "An expression",
-							},
-							options: {
-								type: 'object',
-								optional: true,
-								description: "Options.",
-							},
+					author: "Claude Petit",
+					revision: 4,
+					params: {
+						evalCacheObject: {
+							type: 'object',
+							optional: false,
+							description: "An object to use as cache",
 						},
-						returns: 'any',
-						description: "Evaluates a Javascript expression with some restrictions, with cache.",
+						expression: {
+							type: 'string',
+							optional: false,
+							description: "An expression",
+						},
+						options: {
+							type: 'object',
+							optional: true,
+							description: "Options.",
+						},
+					},
+					returns: 'any',
+					description: "Evaluates a Javascript expression with some restrictions, with cache.",
 				}
 				//! END_REPLACE()
 				, function safeEvalCached(evalCacheObject, expression, /*optional*/options) {
