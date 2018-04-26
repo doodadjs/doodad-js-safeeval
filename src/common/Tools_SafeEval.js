@@ -502,7 +502,8 @@ exports.add = function add(modules) {
 							return evalCacheObject[expression];
 						} else {
 							__Internal__.validateExpression(expression, locals, globals, options);
-							const result = evalCacheObject[expression] = evalFn(expression);
+							const result = evalFn(expression);
+							evalCacheObject[expression] = result;
 							return result;
 						};
 					} else {
