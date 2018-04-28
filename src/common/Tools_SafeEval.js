@@ -395,27 +395,27 @@ exports.add = function add(modules) {
 							optional: true,
 							description: "Options.",
 							/* TODO: Document them somewhere
-										preventAssignment: {
-											type: 'boolean',
-											optional: true,
-											description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
-										},
-										allowFunctions: {
-											type: 'boolean',
-											optional: true,
-											description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function declarations. Otherwise, it will prevent them. Default is 'false'.",
-										},
-										allowNew: {
-											type: 'boolean',
-											optional: true,
-											description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow the 'new' operator. Otherwise, it will prevent it. Default is 'false'.",
-										},
-										allowRegExp: {
-											type: 'boolean',
-											optional: true,
-											description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
-										},
-									*/
+								preventAssignment: {
+									type: 'boolean',
+									optional: true,
+									description: "If 'true', will prevent assignment operators. Otherwise, it will allow them. Default is 'true'.",
+								},
+								allowFunctions: {
+									type: 'boolean',
+									optional: true,
+									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow function declarations. Otherwise, it will prevent them. Default is 'false'.",
+								},
+								allowNew: {
+									type: 'boolean',
+									optional: true,
+									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow the 'new' operator. Otherwise, it will prevent it. Default is 'false'.",
+								},
+								allowRegExp: {
+									type: 'boolean',
+									optional: true,
+									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
+								},
+							*/
 						},
 					},
 					returns: 'any',
