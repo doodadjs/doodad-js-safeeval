@@ -1,32 +1,32 @@
 //! BEGIN_MODULE()
 
 //! REPLACE_BY("// Copyright 2015-2018 Claude Petit, licensed under Apache License version 2.0\n", true)
-// doodad-js - Object-oriented programming framework
-// File: Tools_SafeEval.js - SafeEval tools
-// Project home: https://github.com/doodadjs/
-// Author: Claude Petit, Quebec city
-// Contact: doodadjs [at] gmail.com
-// Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
-// License: Apache V2
-//
-//	Copyright 2015-2018 Claude Petit
-//
-//	Licensed under the Apache License, Version 2.0 (the "License");
-//	you may not use this file except in compliance with the License.
-//	You may obtain a copy of the License at
-//
-//		http://www.apache.org/licenses/LICENSE-2.0
-//
-//	Unless required by applicable law or agreed to in writing, software
-//	distributed under the License is distributed on an "AS IS" BASIS,
-//	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//	See the License for the specific language governing permissions and
-//	limitations under the License.
+	// doodad-js - Object-oriented programming framework
+	// File: Tools_SafeEval.js - SafeEval tools
+	// Project home: https://github.com/doodadjs/
+	// Author: Claude Petit, Quebec city
+	// Contact: doodadjs [at] gmail.com
+	// Note: I'm still in alpha-beta stage, so expect to find some bugs or incomplete parts !
+	// License: Apache V2
+	//
+	//	Copyright 2015-2018 Claude Petit
+	//
+	//	Licensed under the Apache License, Version 2.0 (the "License");
+	//	you may not use this file except in compliance with the License.
+	//	You may obtain a copy of the License at
+	//
+	//		http://www.apache.org/licenses/LICENSE-2.0
+	//
+	//	Unless required by applicable law or agreed to in writing, software
+	//	distributed under the License is distributed on an "AS IS" BASIS,
+	//	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	//	See the License for the specific language governing permissions and
+	//	limitations under the License.
 //! END_REPLACE()
 
 //! IF_SET("mjs")
 //! ELSE()
-"use strict";
+	"use strict";
 //! END_IF()
 
 exports.add = function add(modules) {
@@ -371,30 +371,30 @@ exports.add = function add(modules) {
 
 			safeEval.ADD('eval', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
-				{
-					author: "Claude Petit",
-					revision: 8,
-					params: {
-						expression: {
-							type: 'string',
-							optional: false,
-							description: "An expression",
-						},
-						locals: {
-							type: 'object',
-							optional: true,
-							description: "Local variables.",
-						},
-						globals: {
-							type: 'arrayof(string)',
-							optional: true,
-							description: "List of allowed global variables.",
-						},
-						options: {
-							type: 'object',
-							optional: true,
-							description: "Options.",
-							/* TODO: Document them somewhere
+					{
+						author: "Claude Petit",
+						revision: 8,
+						params: {
+							expression: {
+								type: 'string',
+								optional: false,
+								description: "An expression",
+							},
+							locals: {
+								type: 'object',
+								optional: true,
+								description: "Local variables.",
+							},
+							globals: {
+								type: 'arrayof(string)',
+								optional: true,
+								description: "List of allowed global variables.",
+							},
+							options: {
+								type: 'object',
+								optional: true,
+								description: "Options.",
+								/* TODO: Document them somewhere
 								preventAssignment: {
 									type: 'boolean',
 									optional: true,
@@ -416,11 +416,11 @@ exports.add = function add(modules) {
 									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
 								},
 							*/
+							},
 						},
-					},
-					returns: 'any',
-					description: "Evaluates a Javascript expression with some restrictions.",
-				}
+						returns: 'any',
+						description: "Evaluates a Javascript expression with some restrictions.",
+					}
 				//! END_REPLACE()
 				, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
 					// NOTE: Caller functions should use "safeEvalCached" for performance issues (only when expressions are controlled and limited)
@@ -441,29 +441,29 @@ exports.add = function add(modules) {
 
 			safeEval.ADD('evalCached', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
-				{
-					author: "Claude Petit",
-					revision: 4,
-					params: {
-						evalCacheObject: {
-							type: 'object',
-							optional: false,
-							description: "An object to use as cache",
+					{
+						author: "Claude Petit",
+						revision: 4,
+						params: {
+							evalCacheObject: {
+								type: 'object',
+								optional: false,
+								description: "An object to use as cache",
+							},
+							expression: {
+								type: 'string',
+								optional: false,
+								description: "An expression",
+							},
+							options: {
+								type: 'object',
+								optional: true,
+								description: "Options.",
+							},
 						},
-						expression: {
-							type: 'string',
-							optional: false,
-							description: "An expression",
-						},
-						options: {
-							type: 'object',
-							optional: true,
-							description: "Options.",
-						},
-					},
-					returns: 'any',
-					description: "Evaluates a Javascript expression with some restrictions, with cache.",
-				}
+						returns: 'any',
+						description: "Evaluates a Javascript expression with some restrictions, with cache.",
+					}
 				//! END_REPLACE()
 				, function safeEvalCached(evalCacheObject, expression, /*optional*/options) {
 					// WARNING: If expressions are not controlled and limited, don't use this function because of memory overhead
