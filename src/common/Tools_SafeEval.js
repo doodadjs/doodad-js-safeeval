@@ -54,6 +54,7 @@ exports.add = function add(modules) {
 				deniedTokens: ['eval', 'arguments', 'this'],
 				constants: ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'],
 				allDigitsRegEx: /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/,
+				newLineChars: ['\n', '\r', '\u2028', '\u2029'],
 			};
 
 
@@ -176,6 +177,13 @@ exports.add = function add(modules) {
 							isRegExpFlags = true;
 							noPrevChr = true;
 						};
+					} else if (isComment) {
+						if (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0) { // New line
+							isComment = false;
+							validateToken();
+							checkDenied();
+							functionArgs = [];
+						};
 					} else if (isCommentBlock) {
 						// Comment block
 						if ((prevChr === '*') && (chr.chr === '/')) {
@@ -203,17 +211,17 @@ exports.add = function add(modules) {
 							throw new types.AccessDenied("Assignment is not allowed.");
 						};
 						checkDenied();
-					} else if (isComment && (chr.chr !== '\n') && (chr.chr !== '\r')) {
-						// Statement comment
 					} else if ((prevChr === '/') && (chr.chr === '/')) {
 						// Begin statement comment
 						validateToken();
 						isComment = true;
+						noPrevChr = true;
 					} else if ((prevChr === '/') && (chr.chr === '*')) {
 						// Begin comment block
 						validateToken();
 						isCommentBlock = true;
-					} else if (isGlobal && !tokenName && (prevChr === '/')) {
+						noPrevChr = true;
+					} else if (isGlobal && !tokenName && (prevChr === '/') && (chr.chr !== '/')) {
 						// Begin RegExp
 						if (!allowRegExp) {
 							// For simplicity
@@ -223,25 +231,21 @@ exports.add = function add(modules) {
 						if (chr.chr === '\\') {
 							isEscape = true;
 						};
+						noPrevChr = true;
 					} else if (unicode.isSpace(chr.chr, curLocale)) {
 						// Space
 						validateToken();
 						isDot = false;
 						isGlobal = true;
 						isRegExpFlags = false;
-					} else if ((chr.chr === ';') || (chr.chr === '\n') || (chr.chr === '\r')) { // End of statement
-						if (isComment && (chr.chr === ';')) {
-							// ';' is part of the comment
-						} else {
-							isComment = false;
-							isRegExpFlags = false;
-							validateToken();
-							checkDenied();
-							if (!isDot || (chr.chr === ';')) {
-								isGlobal = true;
-							};
-							functionArgs = [];
+					} else if ((chr.chr === ';') || (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0)) { // End of statement
+						isRegExpFlags = false;
+						validateToken();
+						checkDenied();
+						if (!isDot || (chr.chr === ';')) {
+							isGlobal = true;
 						};
+						functionArgs = [];
 					} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
 						if (!isRegExpFlags) {
 							// Token
@@ -279,6 +283,7 @@ exports.add = function add(modules) {
 								if (preventAssignment) {
 									throw new types.AccessDenied("Increment operators are not allowed.");
 								};
+								noPrevChr = true;
 							};
 						} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
 							// Potential shift assignment

@@ -33,7 +33,7 @@ exports.add = function add(modules) {
 
 		// Unit
 		priority: null,
-			
+
 		proto: {
 			run: function run(root, /*optional*/options) {
 				"use strict";
@@ -47,12 +47,12 @@ exports.add = function add(modules) {
 					io = doodad.IO,
 					safeEval = tools.SafeEval;
 
-					
+
 				if (!options) {
 					options = {};
 				};
-					
-				
+
+
 				test.runCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval", function(command, options) {
 					const hasA = types.has(global, 'a'),
 						oldA = global.a,
@@ -120,7 +120,7 @@ exports.add = function add(modules) {
 						group.runStep(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
 						group.runStep(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
 					});
-						
+
 					command.runGroup("Denied", function(group, options) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=1", null, ['a']);   // assignment denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a='hello'", null, ['a']);   // assignment denied
@@ -151,23 +151,29 @@ exports.add = function add(modules) {
 
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi !`");  // Templates are denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`Hi ${'you'} !`");  // Templates are denied
-								
+
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/*comment*/eval");  // eval is denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval/*comment*/");  // eval is denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "eval//comment");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\neval('1')");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\reval('1')");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\n\reval('1')");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\u2028eval('1')");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\u2029eval('1')");  // eval is denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "//\u2028\u2029eval('1')");  // eval is denied
 
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/");  // RegExp are denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 					});
-						
+
 					command.finalize(function(err, dummy) {
 						if (hasA) {
 							global.a = oldA;
 						} else {
 							delete global.a;
 						};
-						
+
 						if (hasB) {
 							global.b = oldB;
 						} else {
@@ -175,7 +181,7 @@ exports.add = function add(modules) {
 						};
 					});
 				});
-				
+
 			},
 		},
 	};
