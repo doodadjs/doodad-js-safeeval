@@ -100,7 +100,8 @@ exports.add = function add(modules) {
 					waitArgs = false,
 					parentheses = 0,
 					isShift = false,
-					noPrevChr = false;
+					noPrevChr = false,
+					probablyJsFuck = false; // zero-day report by Isiah Meadows
 
 				const maxSafeInteger = types.getSafeIntegerBounds().max;
 
@@ -246,6 +247,13 @@ exports.add = function add(modules) {
 							isGlobal = true;
 						};
 						functionArgs = [];
+					} else if (probablyJsFuck && (['[', '('].indexOf(chr.chr) >= 0)) {
+						throw new types.AccessDenied("Invalid array accessor.");
+					} else if (!tokenName && (['[]', '+[', '!['].indexOf(prevChr + chr.chr) >= 0)) {
+						if (probablyJsFuck) {
+							throw new types.AccessDenied("Invalid array accessor.");
+						};
+						probablyJsFuck = true;
 					} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
 						if (!isRegExpFlags) {
 							// Token
@@ -267,7 +275,12 @@ exports.add = function add(modules) {
 						isRegExpFlags = false;
 						isAssignment = false;
 						isShift = false;
-						if ((chr.chr === '"') || (chr.chr === "'")) {
+						probablyJsFuck = false;
+						if (chr.chr === '.') {
+							checkDenied();
+							isDot = true;
+							isGlobal = false;
+						} else if ((chr.chr === '"') || (chr.chr === "'")) {
 							// Begin String
 							checkDenied();
 							isString = true;
@@ -291,10 +304,6 @@ exports.add = function add(modules) {
 						} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
 							// Potential assignment
 							isAssignment = true;
-						} else if (chr.chr === '.') {
-							checkDenied();
-							isDot = true;
-							isGlobal = false;
 						} else if (isFunction && (chr.chr === '{')) {
 							if (brakets >= maxSafeInteger) {
 								// Should not happen
@@ -418,7 +427,7 @@ exports.add = function add(modules) {
 								allowRegExp: {
 									type: 'boolean',
 									optional: true,
-									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow regular expressions. Otherwise, it will prevent them. Default is 'false'.",
+									description: "IMPORTANT: Experimental, please leave it to 'false' (the default), or report bugs... If 'true', will allow syntactic regular expressions. Otherwise, it will prevent them. Default is 'false'.",
 								},
 							*/
 							},
