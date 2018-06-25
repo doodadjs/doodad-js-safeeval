@@ -127,6 +127,8 @@ exports.add = function add(modules) {
 						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(1)");
 						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(x)", {x: 1});
 						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(x.y)", {x: {y: 1}});
+						group.runStep(0, {}, 			 /**/ "([1,2]).indexOf(1)");
+						group.runStep(true, {},			 /**/ "([1,2].indexOf(1) >= 0)");
 						group.runStep(0, {}, 			 /**/ "a.indexOf(x.y)", {a: [1,2], x: {y: 1}});
 						group.runStep(true, {}, 		 /**/ "(a.indexOf(x.y) >= 0)", {a: [1,2], x: {y: 1}});
 
@@ -232,6 +234,7 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "'hello'.constructor.constructor('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`hello`.constructor.constructor('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "x['constructor']['constructor']('return eval')()('1')", {x: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "({})['constructor']['constructor']('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]['constructor']['constructor']('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[0]['constructor']['constructor']('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0['constructor']['constructor']('return eval')()('1')");
@@ -258,6 +261,26 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const x='constructor';0[x][x]('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const x='constructor',y=0;y[x][x]('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a[['c','o','n','s','t','r','u','c','t','o','r'].join('')][['c','o','n','s','t','r','u','c','t','o','r'].join('')]('return eval')()('1')", {a: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[].indexOf['constructor']('return eval')()('1')");
+
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(0)['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((0))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(-0)['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((-0))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(+0)['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((+0))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(0+1)['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((0+1))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0,0['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ ";0['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "'';0['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "([])['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(([]))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "({})['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(({}))['constructor']");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[].indexOf['constructor']");
 					});
 
 					command.finalize(function(err, dummy) {

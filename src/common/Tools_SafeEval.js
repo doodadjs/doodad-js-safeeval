@@ -98,8 +98,7 @@ exports.add = function add(modules) {
 					level = {name: ''},
 					prevLevel = level,
 					isShift = false,
-					noPrevChr = false,
-					isConstant = false;
+					noPrevChr = false;
 
 				const levels = [level];
 
@@ -120,10 +119,9 @@ exports.add = function add(modules) {
 
 				const validateTokens = function validateTokens() {
 					/* eslint no-cond-assign: "off" */
-					isConstant = false;
-					let deniedToken = '';
 					let tokenName;
-					while (!deniedToken && (tokenName = lastTokens.shift())) {
+					while (tokenName = lastTokens.shift()) {
+						let deniedToken = '';
 						if (tools.indexOf(__Internal__.deniedTokensAlways, tokenName) >= 0) {
 							// Invalid
 							deniedToken = tokenName;
@@ -133,28 +131,26 @@ exports.add = function add(modules) {
 								deniedToken = tokenName;
 							} else if (__Internal__.allDigitsRegEx.test(tokenName)) {
 								// Valid
-								isConstant = true;
 							} else if (allowNew && (tokenName === 'new')) {
 								// Valid
 							} else if (tools.indexOf(__Internal__.constants, tokenName) >= 0) {
 								// Valid
-								isConstant = true;
 							} else if (types.has(locals, tokenName)) {
 								// Valid
-								isConstant = true;
 							} else if (tools.indexOf(globals, tokenName) >= 0) {
 								// Valid
-								isConstant = true;
 							} else if (isFunction && (tools.indexOf(functionArgs, tokenName) >= 0)) {
 								// Valid
-								isConstant = true;
 							} else {
 								deniedToken = tokenName;
 							};
 						};
+						if (deniedToken) {
+							throw new types.AccessDenied("Access to '~0~' is denied.", [deniedToken]);
+						};
 					};
-					if (deniedToken) {
-						throw new types.AccessDenied("Access to '~0~' is denied.", [deniedToken]);
+					if (tokenName) {
+						isGlobal = false;
 					};
 				};
 
@@ -174,7 +170,7 @@ exports.add = function add(modules) {
 							// String closure
 							isString = false;
 							noPrevChr = true;
-							isConstant = true;
+							isGlobal = false;
 						};
 					} else if (isRegExpFlags) {
 						if ((chr.codePoint < 97) || (chr.codePoint > 122)) { // 'a', 'z'
@@ -267,8 +263,6 @@ exports.add = function add(modules) {
 						};
 						continue loopChars;
 					} else if (unicode.isSpace(chr.chr, curLocale)) { // Space
-						isDot = false;
-						isGlobal = true;
 						do {
 							chr = chr.nextChar();
 						} while (chr && unicode.isSpace(chr.chr, curLocale));
@@ -298,9 +292,7 @@ exports.add = function add(modules) {
 						continue loopChars;
 					} else if (['][', '+[', '-[', '![', '~[', '|[', '&[', '*[', '/['].indexOf(prevChr + chr.chr) >= 0) {
 						// JsFuck or whatever non-sense
-						throw new types.AccessDenied("Invalid object accessor.");
-					} else if (isConstant && (chr.chr === '[')) {
-						throw new types.AccessDenied("Invalid object accessor.");
+						throw new types.AccessDenied("Invalid property accessor.");
 					} else if (chr.chr === '\\') {
 						// For simplicity
 						throw new types.AccessDenied("Escape sequences not allowed.");
@@ -320,10 +312,13 @@ exports.add = function add(modules) {
 						throw new types.AccessDenied("Template strings are denied.");
 					} else if (chr.chr === ']') {
 						popLevel('[');
+						isGlobal = false;
 					} else if (chr.chr === '[') {
+						if (!isGlobal || (lastTokens.length > 0)) {
+							throw new types.AccessDenied("Invalid property accessor.");
+						};
 						pushLevel('[');
 						validateTokens();
-						isGlobal = false;
 					} else if (chr.chr === '{') {
 						pushLevel('{');
 					} else if (chr.chr === '}') {
@@ -332,7 +327,6 @@ exports.add = function add(modules) {
 					} else if (chr.chr === '(') {
 						validateTokens();
 						pushLevel('(');
-						isGlobal = false;
 					} else if (chr.chr === ')') {
 						popLevel('(');
 						if (isFunctionArgs) {
@@ -340,37 +334,31 @@ exports.add = function add(modules) {
 							functionArgs = lastTokens;
 							lastTokens = [];
 						};
-						if (isDot || isGlobal) {
+					} else if (((chr.chr === '+') || (chr.chr === '-')) && (prevChr === chr.chr)) {
+						validateTokens();
+						// Increment
+						if (preventAssignment) {
+							throw new types.AccessDenied("Increment operators are not allowed.");
+						};
+						noPrevChr = true;
+					} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
+						// Potential shift assignment
+						isShift = true;
+					} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
+						// Potential assignment
+						isAssignment = true;
+					} else {
+						if (chr.chr !== ',') {
 							validateTokens();
 						};
-					} else if (chr.chr === ',') {
-						// Does nothing
-					} else {
-						isDot = false;
-						isGlobal = true;
 						isAssignment = false;
 						isShift = false;
 						if (chr.chr === '.') {
-							validateTokens();
 							isDot = true;
 							isGlobal = false;
-						} else if ((chr.chr === '+') || (chr.chr === '-')) {
-							validateTokens();
-							if (prevChr === chr.chr) {
-								// Increment
-								if (preventAssignment) {
-									throw new types.AccessDenied("Increment operators are not allowed.");
-								};
-								noPrevChr = true;
-							};
-						} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
-							// Potential shift assignment
-							isShift = true;
-						} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
-							// Potential assignment
-							isAssignment = true;
 						} else {
-							validateTokens();
+							isDot = false;
+							isGlobal = true;
 						};
 					};
 					if (noPrevChr) {
