@@ -51,7 +51,8 @@ exports.add = function add(modules) {
 			//===================================
 
 			const __Internal__ = {
-				deniedTokens: ['eval', 'arguments', 'this'],
+				deniedTokensAlways: ['constructor', '__proto__'],
+				deniedTokensGlobal: ['eval', 'arguments', 'this', 'var', 'const', 'let'],
 				constants: ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'],
 				allDigitsRegEx: /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/,
 				newLineChars: ['\n', '\r', '\u2028', '\u2029'],
@@ -65,7 +66,6 @@ exports.add = function add(modules) {
 			//tools.complete(_shared.Natives, {
 			//});
 
-
 			__Internal__.validateExpression = function(expression, locals, globals, options) {
 				// TODO: Escape sequences
 				// TODO: String templates
@@ -74,7 +74,6 @@ exports.add = function add(modules) {
 					allowFunctions = types.get(options, 'allowFunctions', false),  // EXPERIMENTAL
 					allowNew = types.get(options, 'allowNew', false),  // EXPERIMENTAL
 					allowRegExp = types.get(options, 'allowRegExp', false);  // EXPERIMENTAL
-
 				if (root.DD_ASSERT) {
 					root.DD_ASSERT(types.isString(expression), "Invalid expression.");
 					root.DD_ASSERT(types.isNothing(locals) || types.isJsObject(locals), "Invalid locals.");
@@ -90,68 +89,80 @@ exports.add = function add(modules) {
 					isCommentBlock = false,
 					isRegExp = false,
 					isRegExpFlags = false,
-					tokenName = '',
 					isGlobal = true,
 					isDot = false,
+					lastTokens = [],
 					isFunction = false,
-					deniedTokens = [],
-					functionArgs = [],
-					brakets = 0,
-					waitArgs = false,
-					parentheses = 0,
+					isFunctionArgs = false,
+					functionArgs = null,
+					level = {name: ''},
+					prevLevel = level,
 					isShift = false,
 					noPrevChr = false,
-					probablyJsFuck = false; // zero-day report by Isiah Meadows
+					isConstant = false;
 
-				const maxSafeInteger = types.getSafeIntegerBounds().max;
+				const levels = [level];
 
-				const validateToken = function validateToken() {
-					if (tokenName) {
-						if (isGlobal) {
-							if (tools.indexOf(__Internal__.deniedTokens, tokenName) >= 0) {
-								throw new types.AccessDenied("Access to '~0~' is denied.", [tokenName]);
+				//const maxSafeInteger = types.getSafeIntegerBounds().max;
+
+				const pushLevel = function(name) {
+					level = {name};
+					levels.push(level);
+				};
+
+				const popLevel = function(name) {
+					prevLevel = level;
+					level = levels.pop();
+					if (level.name !== name) {
+						throw new types.AccessDenied("Invalid expression.");
+					};
+				};
+
+				const validateTokens = function validateTokens() {
+					/* eslint no-cond-assign: "off" */
+					isConstant = false;
+					let deniedToken = '';
+					let tokenName;
+					while (!deniedToken && (tokenName = lastTokens.shift())) {
+						if (tools.indexOf(__Internal__.deniedTokensAlways, tokenName) >= 0) {
+							// Invalid
+							deniedToken = tokenName;
+						} else if (isGlobal) {
+							if (tools.indexOf(__Internal__.deniedTokensGlobal, tokenName) >= 0) {
+								// Invalid
+								deniedToken = tokenName;
 							} else if (__Internal__.allDigitsRegEx.test(tokenName)) {
 								// Valid
+								isConstant = true;
 							} else if (allowNew && (tokenName === 'new')) {
 								// Valid
 							} else if (tools.indexOf(__Internal__.constants, tokenName) >= 0) {
 								// Valid
+								isConstant = true;
 							} else if (types.has(locals, tokenName)) {
 								// Valid
+								isConstant = true;
 							} else if (tools.indexOf(globals, tokenName) >= 0) {
 								// Valid
-							} else if (tools.indexOf(functionArgs, tokenName) >= 0) {
+								isConstant = true;
+							} else if (isFunction && (tools.indexOf(functionArgs, tokenName) >= 0)) {
 								// Valid
-							} else if (isFunction && (brakets === 1) && (tokenName === 'return')) {
-								// Valid
-							} else if (tokenName === 'function') {
-								if (!allowFunctions) {
-									throw new types.AccessDenied("Functions are denied.");
-								};
-								if (isFunction) {
-									// For simplicity
-									throw new types.AccessDenied("Function in function is denied.");
-								};
-								isFunction = true;
-								waitArgs = true;
+								isConstant = true;
 							} else {
-								deniedTokens.push(tokenName);
+								deniedToken = tokenName;
 							};
 						};
-						tokenName = '';
 					};
-				};
-
-				const checkDenied = function checkDenied() {
-					if (deniedTokens.length) {
-						throw new types.AccessDenied("Access to '~0~' is denied.", [deniedTokens[0]]);
+					if (deniedToken) {
+						throw new types.AccessDenied("Access to '~0~' is denied.", [deniedToken]);
 					};
 				};
 
 				const curLocale = locale.getCurrent();
 
 				let chr = unicode.nextChar(expression);
-				while (chr) {
+
+				loopChars: while (chr) {
 					if (isString) {
 						if (isEscape) {
 							// Escaped char
@@ -163,6 +174,11 @@ exports.add = function add(modules) {
 							// String closure
 							isString = false;
 							noPrevChr = true;
+							isConstant = true;
+						};
+					} else if (isRegExpFlags) {
+						if ((chr.codePoint < 97) || (chr.codePoint > 122)) { // 'a', 'z'
+							isRegExpFlags = false;
 						};
 					} else if (isRegExp) {
 						// RegExp
@@ -181,9 +197,7 @@ exports.add = function add(modules) {
 					} else if (isComment) {
 						if (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0) { // New line
 							isComment = false;
-							validateToken();
-							checkDenied();
-							functionArgs = [];
+							validateTokens();
 						};
 					} else if (isCommentBlock) {
 						// Comment block
@@ -203,26 +217,29 @@ exports.add = function add(modules) {
 						};
 						isAssignment = false;
 						isFunction = true;
-						functionArgs = deniedTokens;
-						deniedTokens = [];
-						brakets = 0;
+						if (prevLevel.name === '(') {
+							functionArgs = lastTokens;
+							lastTokens = [];
+						} else if (lastTokens.length > 0) {
+							functionArgs = [lastTokens.pop()];
+						} else {
+							functionArgs = [];
+						};
 					} else if ((isAssignment && (chr.chr !== '=')) || (isShift && (chr.chr === '='))) {
 						// Assignment
 						if (preventAssignment) {
 							throw new types.AccessDenied("Assignment is not allowed.");
 						};
-						checkDenied();
+						validateTokens();
 					} else if ((prevChr === '/') && (chr.chr === '/')) {
 						// Begin statement comment
-						validateToken();
 						isComment = true;
 						noPrevChr = true;
 					} else if ((prevChr === '/') && (chr.chr === '*')) {
 						// Begin comment block
-						validateToken();
 						isCommentBlock = true;
 						noPrevChr = true;
-					} else if (isGlobal && !tokenName && (prevChr === '/') && (chr.chr !== '/')) {
+					} else if (isGlobal && (lastTokens.length <= 0) && (prevChr === '/') && (chr.chr !== '/')) {
 						// Begin RegExp
 						if (!allowRegExp) {
 							// For simplicity
@@ -233,64 +250,112 @@ exports.add = function add(modules) {
 							isEscape = true;
 						};
 						noPrevChr = true;
-					} else if (unicode.isSpace(chr.chr, curLocale)) {
-						// Space
-						validateToken();
-						isDot = false;
-						isGlobal = true;
-						isRegExpFlags = false;
 					} else if ((chr.chr === ';') || (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0)) { // End of statement
-						isRegExpFlags = false;
-						validateToken();
-						checkDenied();
-						if (!isDot || (chr.chr === ';')) {
+						validateTokens();
+						let hasSemi = false;
+						do {
+							if (chr.chr === ';') {
+								hasSemi = true;
+							};
+							chr = chr.nextChar();
+						} while (chr && ((chr.chr === ';') || (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0)));
+						if (!isDot || hasSemi) {
 							isGlobal = true;
 						};
-						functionArgs = [];
-					} else if (probablyJsFuck && (['[', '('].indexOf(chr.chr) >= 0)) {
-						throw new types.AccessDenied("Invalid array accessor.");
-					} else if (!tokenName && (['[]', '+[', '!['].indexOf(prevChr + chr.chr) >= 0)) {
-						if (probablyJsFuck) {
-							throw new types.AccessDenied("Invalid array accessor.");
+						if (hasSemi) {
+							prevChr = '';
 						};
-						probablyJsFuck = true;
+						continue loopChars;
+					} else if (unicode.isSpace(chr.chr, curLocale)) { // Space
+						isDot = false;
+						isGlobal = true;
+						do {
+							chr = chr.nextChar();
+						} while (chr && unicode.isSpace(chr.chr, curLocale));
+						continue loopChars;
 					} else if ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)) {
-						if (!isRegExpFlags) {
+						let tokenName = '';
+						do {
 							// Token
 							tokenName += chr.chr;
+							chr = chr.nextChar();
+						} while (chr && ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)));
+						if (tokenName === 'function') {
+							if (!allowFunctions) {
+								throw new types.AccessDenied("Functions are denied.");
+							};
+							if (isFunction || isFunctionArgs) {
+								// For simplicity
+								throw new types.AccessDenied("Function in function is denied.");
+							};
+							isFunctionArgs = true;
+						} else if (isFunction && (tokenName === 'return')) {
+							// Ignore
+						} else {
+							lastTokens.push(tokenName);
 						};
+						prevChr = '';
+						continue loopChars;
+					} else if (['][', '+[', '-[', '![', '~[', '|[', '&[', '*[', '/['].indexOf(prevChr + chr.chr) >= 0) {
+						// JsFuck or whatever non-sense
+						throw new types.AccessDenied("Invalid object accessor.");
+					} else if (isConstant && (chr.chr === '[')) {
+						throw new types.AccessDenied("Invalid object accessor.");
 					} else if (chr.chr === '\\') {
 						// For simplicity
 						throw new types.AccessDenied("Escape sequences not allowed.");
 					} else if (chr.codePoint > 0x7F) {
 						// For simplicity
 						throw new types.AccessDenied("Invalid character.");
-					} else if (chr.chr === ':') {
-						tokenName = '';
-						isRegExpFlags = false;
+					} else if ((level.name === '{') && (chr.chr === ':')) {
+						lastTokens = [];
+					} else if ((chr.chr === '"') || (chr.chr === "'")) {
+						// Begin String
+						validateTokens();
+						isString = true;
+						stringChar = chr.chr;
+					} else if (chr.chr === '`') {
+						validateTokens();
+						// For simplicity.
+						throw new types.AccessDenied("Template strings are denied.");
+					} else if (chr.chr === ']') {
+						popLevel('[');
+					} else if (chr.chr === '[') {
+						pushLevel('[');
+						validateTokens();
+						isGlobal = false;
+					} else if (chr.chr === '{') {
+						pushLevel('{');
+					} else if (chr.chr === '}') {
+						popLevel('{');
+						isGlobal = false;
+					} else if (chr.chr === '(') {
+						validateTokens();
+						pushLevel('(');
+						isGlobal = false;
+					} else if (chr.chr === ')') {
+						popLevel('(');
+						if (isFunctionArgs) {
+							isFunction = true;
+							functionArgs = lastTokens;
+							lastTokens = [];
+						};
+						if (isDot || isGlobal) {
+							validateTokens();
+						};
+					} else if (chr.chr === ',') {
+						// Does nothing
 					} else {
-						validateToken();
 						isDot = false;
 						isGlobal = true;
-						isRegExpFlags = false;
 						isAssignment = false;
 						isShift = false;
-						probablyJsFuck = false;
 						if (chr.chr === '.') {
-							checkDenied();
+							validateTokens();
 							isDot = true;
 							isGlobal = false;
-						} else if ((chr.chr === '"') || (chr.chr === "'")) {
-							// Begin String
-							checkDenied();
-							isString = true;
-							stringChar = chr.chr;
-						} else if (chr.chr === '`') {
-							// For simplicity.
-							checkDenied();
-							throw new types.AccessDenied("Template strings are denied.");
 						} else if ((chr.chr === '+') || (chr.chr === '-')) {
-							checkDenied();
+							validateTokens();
 							if (prevChr === chr.chr) {
 								// Increment
 								if (preventAssignment) {
@@ -304,44 +369,8 @@ exports.add = function add(modules) {
 						} else if ((chr.chr === '=') && ((prevChr !== '>') && (prevChr !== '<') && (prevChr !== '=') && (prevChr !== '!'))) {
 							// Potential assignment
 							isAssignment = true;
-						} else if (isFunction && (chr.chr === '{')) {
-							if (brakets >= maxSafeInteger) {
-								// Should not happen
-								throw new types.Error("Integer overflow.");
-							};
-							brakets++;
-						} else if (isFunction && (chr.chr === '}')) {
-							brakets--;
-							if (brakets <= 0) {
-								isFunction = false;
-								brakets = 0;
-								functionArgs = [];
-							};
-						} else if (chr.chr === '(') {
-							if (isFunction) {
-								if (waitArgs) {
-									if (parentheses >= maxSafeInteger) {
-										// Should not happen
-										throw new types.Error("Integer overflow.");
-									};
-									parentheses++;
-								} else {
-									checkDenied();
-								};
-							};
-						} else if (chr.chr === ')') {
-							if (isFunction) {
-								if (waitArgs) {
-									waitArgs = false;
-									parentheses = 0;  // can't have more than one parenthese
-									functionArgs = deniedTokens;
-									deniedTokens = [];
-								} else {
-									checkDenied();
-								};
-							};
 						} else {
-							checkDenied();
+							validateTokens();
 						};
 					};
 					if (noPrevChr) {
@@ -353,9 +382,7 @@ exports.add = function add(modules) {
 					chr = chr.nextChar();
 				};
 
-				validateToken();
-
-				checkDenied();
+				validateTokens();
 			};
 
 			__Internal__.createEvalFn = function createEvalFn(locals, globals) {
@@ -500,7 +527,7 @@ exports.add = function add(modules) {
 					} else {
 						locals = types.freezeObject(types.clone(types.get(options, 'locals')));
 						globals = types.freezeObject(types.clone(types.get(options, 'globals')));
-						options = types.freezeObject(tools.extend({}, options, {locals: locals, globals: globals}));
+						options = types.freezeObject(tools.extend({}, options, {locals, globals}));
 						evalFn = __Internal__.createEvalFn(locals, globals);
 						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalFn, evalFn, {});
 						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});

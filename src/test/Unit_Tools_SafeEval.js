@@ -119,6 +119,25 @@ exports.add = function add(modules) {
 						group.runStep(global.RegExp, {mode: 'isinstance'}, /**/ "/\\//g", null, null, {allowRegExp: true});
 						group.runStep(NaN, {},			/**/ "/hello/*/*hello*/1", null, null, {allowRegExp: true});
 						group.runStep(NaN, {},			/**/ "/\\//*/*hello*/1", null, null, {allowRegExp: true});
+
+
+						group.runStep([1], {}, 			 /**/ "[1]");
+						group.runStep([1,2], {}, 		 /**/ "[1,2]");
+
+						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(1)");
+						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(x)", {x: 1});
+						group.runStep(0, {}, 			 /**/ "[1,2].indexOf(x.y)", {x: {y: 1}});
+						group.runStep(0, {}, 			 /**/ "a.indexOf(x.y)", {a: [1,2], x: {y: 1}});
+						group.runStep(true, {}, 		 /**/ "(a.indexOf(x.y) >= 0)", {a: [1,2], x: {y: 1}});
+
+						group.runStep(2, {}, 	/**/ "(function(a){return a+1})(1)", null, null, {allowFunctions: true});
+						group.runStep(3, {}, 	/**/ "(function(a,b){return a+b})(1,2)", null, null, {allowFunctions: true});
+						group.runStep(2, {},	/**/ "(a=>a+1)(1)", null, null, {allowFunctions: true});
+						group.runStep(2, {},	/**/ "(a=>{return a+1})(1)", null, null, {allowFunctions: true});
+						group.runStep(2, {},	/**/ "((a)=>a+1)(1)", null, null, {allowFunctions: true});
+						group.runStep(3, {},	/**/ "((a,b)=>a+b)(1,2)", null, null, {allowFunctions: true});
+						group.runStep(2, {},	/**/ "((a)=>{return a+1})(1)", null, null, {allowFunctions: true});
+						group.runStep(3, {},	/**/ "((a,b)=>{return a+b})(1,2)", null, null, {allowFunctions: true});
 					});
 
 					command.runGroup("Denied", function(group, options) {
@@ -166,8 +185,79 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "/hello/*/*hello*/a", null, null, {allowRegExp: true}); // Access to "a" denied
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a=/hello/", null, ['a'], {allowRegExp: true}); // assignment denied
 
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "var a");   // 'var' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const a");   // 'const' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "let a");   // 'let' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "var a, b = [1, 2]");   // 'var' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const a, b = [1, 2]");   // 'const' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "let a, b = [1, 2]");   // 'let' denied
+
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(function(a){return a+eval('1')})(1)", null, null, {allowFunctions: true});  // 'eval' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a=>a+eval('1'))(1)", null, null, {allowFunctions: true});  // 'eval' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((a)=>a+eval('1'))(1)", null, null, {allowFunctions: true});  // 'eval' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a=>{return a+eval('1')})(1)", null, null, {allowFunctions: true});  // 'eval' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "((a)=>{return a+eval('1')})(1)", null, null, {allowFunctions: true});  // 'eval' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a,b=>a+b)(1,2)", null, null, {allowFunctions: true});  // 'a' denied
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a,b=>{return a+b})(1,2)", null, null, {allowFunctions: true});  // 'a' denied
+
 						// JsFuck, zero-day report by Isiah Meadows
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()"); // invalid array accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![  ]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  [  ]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n[\n]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![  ]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  !  []"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n!\n[\n]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][[]]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ]  [  [  ]  ]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ][[  ]]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[\n]\n[\n[\n]\n]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[![]]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+!+[]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!+[]+!+[]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[[+!+[]]+[+[]]]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]+[]"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()"); // invalid object accessor
+
+						// zero-day report by Mike Samuel
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "x.constructor.constructor('return eval')()('1')", {x: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[].constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0.constructor.constructor('return eval')()('1')");  // in case of
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0..constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "\"hello\".constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "'hello'.constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`hello`.constructor.constructor('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "x['constructor']['constructor']('return eval')()('1')", {x: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[0]['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0.['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0.1['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0x0['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0x00['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0b0['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0o0['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "NaN['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0  [  'constructor'  ]  [  'constructor'  ]  (  '  return eval  ')  (  )(  '  1  '  )");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "Infinity['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "true['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "false['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "\"hello\"[\"constructor\"]['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "'hello'['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "`hello`['constructor']['constructor']('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a['constructor']['constructor']('return eval')()('1')", {a: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a['\\x63onstructor']['constructor']('return eval')()('1')", {a: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a['\\u0063onstructor']['constructor']('return eval')()('1')", {a: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a['\\u{00000063}onstructor']['constructor']('return eval')()('1')", {a: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "0[x][x]('return eval')()('1')", {x: 'constructor'});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "y[x][x]('return eval')()('1')", {x: 'constructor', y: 0});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const x='constructor';0[x][x]('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "const x='constructor',y=0;y[x][x]('return eval')()('1')");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "a[['c','o','n','s','t','r','u','c','t','o','r'].join('')][['c','o','n','s','t','r','u','c','t','o','r'].join('')]('return eval')()('1')", {a: 0});
 					});
 
 					command.finalize(function(err, dummy) {
