@@ -203,26 +203,26 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(a,b=>{return a+b})(1,2)", null, null, {allowFunctions: true});  // 'a' denied
 
 						// JsFuck, zero-day report by Isiah Meadows
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![  ]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  [  ]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n[\n]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![  ]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  !  []"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n!\n[\n]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][[]]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ]  [  [  ]  ]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ][[  ]]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[\n]\n[\n[\n]\n]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[![]]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+!+[]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!+[]+!+[]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[[+!+[]]+[+[]]]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]+[]"); // invalid object accessor
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()"); // invalid object accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "![  ]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  [  ]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n[\n]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!![  ]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!  !  []"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!\n!\n[\n]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][[]]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ]  [  [  ]  ]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[  ][[  ]]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[\n]\n[\n[\n]\n]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[![]]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+!+[]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!+[]+!+[]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[[+!+[]]+[+[]]]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "+[]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]+[]"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()"); // invalid property accessor
 
 						// zero-day report by Mike Samuel
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "constructor.constructor('return eval')()('1')");
@@ -281,6 +281,11 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "({})['constructor']");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(({}))['constructor']");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[].indexOf['constructor']");
+
+						// Classes
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "class Monkey");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(class Monkey)");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(new (class Monkey {hack() {return eval(1)}})).hack()", null, null, {allowNew: true});
 					});
 
 					command.finalize(function(err, dummy) {

@@ -52,10 +52,22 @@ exports.add = function add(modules) {
 
 			const __Internal__ = {
 				deniedTokensAlways: ['constructor', '__proto__'],
-				deniedTokensGlobal: ['eval', 'arguments', 'this', 'var', 'const', 'let'],
+				deniedTokensGlobal: [
+					// eval
+					'Function', 'eval',
+					// Other eval
+					'setTimeout', 'setInterval',
+					// Arguments and 'this'.
+					'arguments', 'this',
+					// Variables
+					'var', 'const', 'let'
+				],
 				constants: ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'],
 				allDigitsRegEx: /^([0-9]+[.]?[0-9]*([e][-+]?[0-9]+)?|0[xX]([0-9a-fA-F])+|0[bB]([01])+|0[oO]([0-7])+)$/,
 				newLineChars: ['\n', '\r', '\u2028', '\u2029'],
+
+				symbolCachedSafeEvalFn: types.getSymbol('__SAFE_EVAL_FN__'),
+				symbolCachedSafeEvalOptions: types.getSymbol('__SAFE_EVAL_OPTIONS__'),
 			};
 
 
@@ -69,6 +81,8 @@ exports.add = function add(modules) {
 			__Internal__.validateExpression = function(expression, locals, globals, options) {
 				// TODO: Escape sequences
 				// TODO: String templates
+				// TODO: Function in function
+				// TODO: Class
 
 				const preventAssignment = types.get(options, 'preventAssignment', true),
 					allowFunctions = types.get(options, 'allowFunctions', false),  // EXPERIMENTAL
@@ -79,6 +93,12 @@ exports.add = function add(modules) {
 					root.DD_ASSERT(types.isNothing(locals) || types.isJsObject(locals), "Invalid locals.");
 					root.DD_ASSERT(types.isNothing(globals) || types.isArray(globals), "Invalid globals.");
 				};
+
+				// FUTURE: Automatic AST rewrite of "obj[key]" to "get(obj, key)".
+				/*
+				let newExpr = null,
+					dynamicGetFn = types.get(options, 'dynamicGetFn', null);
+				*/
 
 				let prevChr = '',
 					isString = false,
@@ -274,7 +294,10 @@ exports.add = function add(modules) {
 							tokenName += chr.chr;
 							chr = chr.nextChar();
 						} while (chr && ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)));
-						if (tokenName === 'function') {
+						if (tokenName === 'class') {
+							// For simplicity
+							throw new types.AccessDenied("Classes are denied.");
+						} else if (tokenName === 'function') {
 							if (!allowFunctions) {
 								throw new types.AccessDenied("Functions are denied.");
 							};
@@ -315,6 +338,17 @@ exports.add = function add(modules) {
 						isGlobal = false;
 					} else if (chr.chr === '[') {
 						if (!isGlobal || (lastTokens.length > 0)) {
+							// FUTURE: Automatic AST rewrite of "obj[key]" to "get(obj, key)".
+							/*
+							if (dynamicGetFn === null) {
+								dynamicGetFn = '__' + types.generateUUID().replace(/[-]/g, '');
+								locals[dynamicGetFn] = safeEval.get;
+							};
+							if (newExpr === null) {
+								newExpr = expression.slice(0, .......);
+							};
+							newExpr += dynamicGetFn + "(" ..................;
+							*/
 							throw new types.AccessDenied("Invalid property accessor.");
 						};
 						pushLevel('[');
@@ -371,6 +405,11 @@ exports.add = function add(modules) {
 				};
 
 				validateTokens();
+
+				// FUTURE: Automatic AST rewrite of "obj[key]" to "get(obj, key)".
+				/*
+				return (newExpr === null ? expression : newExpr);
+				*/
 			};
 
 			__Internal__.createEvalFn = function createEvalFn(locals, globals) {
@@ -397,6 +436,38 @@ exports.add = function add(modules) {
 					return tools.createEval(types.keys(locals)).apply(null, types.values(locals));
 				};
 			};
+
+			safeEval.ADD('get', root.DD_DOC(
+				//! REPLACE_IF(IS_UNSET('debug'), "null")
+					{
+						author: "Claude Petit",
+						revision: 0,
+						params: {
+							obj: {
+								type: 'any',
+								optional: false,
+								description: "An object.",
+							},
+							key: {
+								type: 'string,symbol',
+								optional: false,
+								description: "A key",
+							},
+						},
+						returns: 'any',
+						description: "Used to safely and dynamically get a value from an obect key. Please provide that function as part of the 'locals' argument of 'safeEval.eval' or 'safeEval.evalCached', and use it in your expresions instead of the '[...]' property accessor operator.",
+					}
+				//! END_REPLACE()
+				, function get(obj, key) {
+					// FUTURE: Automatic AST rewrite of "obj[key]" to "get(obj, key)".
+					if (!types.isString(key) && !types.isSymbol(key)) {
+						key = types.toString(key);
+					};
+					if (__Internal__.deniedTokensAlways.indexOf(key) >= 0) {
+						throw new types.AccessDenied("Access to '~0~' is denied.", [key]);
+					};
+					return obj[key];
+				}));
 
 			safeEval.ADD('eval', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
@@ -451,7 +522,7 @@ exports.add = function add(modules) {
 						description: "Evaluates a Javascript expression with some restrictions.",
 					}
 				//! END_REPLACE()
-				, function safeEval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
+				, function _eval(expression, /*optional*/locals, /*optional*/globals, /*optional*/options) {
 					// NOTE: Caller functions should use "safeEvalCached" for performance issues (only when expressions are controlled and limited)
 
 					// Restrict access to locals (locals={...}) and globals (globals=[...]).
@@ -465,14 +536,11 @@ exports.add = function add(modules) {
 					return evalFn(expression);
 				}));
 
-			__Internal__.symbolCachedSafeEvalFn = types.getSymbol('__SAFE_EVAL_FN__');
-			__Internal__.symbolCachedSafeEvalOptions = types.getSymbol('__SAFE_EVAL_OPTIONS__');
-
 			safeEval.ADD('evalCached', root.DD_DOC(
 				//! REPLACE_IF(IS_UNSET('debug'), "null")
 					{
 						author: "Claude Petit",
-						revision: 4,
+						revision: 5,
 						params: {
 							evalCacheObject: {
 								type: 'object',
@@ -494,7 +562,7 @@ exports.add = function add(modules) {
 						description: "Evaluates a Javascript expression with some restrictions, with cache.",
 					}
 				//! END_REPLACE()
-				, function safeEvalCached(evalCacheObject, expression, /*optional*/options) {
+				, function evalCached(evalCacheObject, expression, /*optional*/options) {
 					// WARNING: If expressions are not controlled and limited, don't use this function because of memory overhead
 					// WARNING: Will always uses the same options for the same cache object
 
@@ -503,10 +571,12 @@ exports.add = function add(modules) {
 						root.DD_ASSERT(types.isString(expression), "Invalid expression.");
 					};
 
-					let locals = null,
-						globals = null;
+					expression = tools.trim(types.toString(expression));
 
 					let evalFn = evalCacheObject[__Internal__.symbolCachedSafeEvalFn];
+
+					let locals,
+						globals;
 
 					if (evalFn) {
 						options = evalCacheObject[__Internal__.symbolCachedSafeEvalOptions];
@@ -521,25 +591,23 @@ exports.add = function add(modules) {
 						types.setAttribute(evalCacheObject, __Internal__.symbolCachedSafeEvalOptions, options, {});
 					};
 
-					expression = tools.trim(expression);
+					const notDenied = (__Internal__.deniedTokensAlways.indexOf(expression) < 0);
 
-					if ((expression !== __Internal__.symbolCachedSafeEvalFn) && (expression !== __Internal__.symbolCachedSafeEvalOptions)) {
-						if ((expression === '__proto__') || (expression === 'constructor')) {
-							__Internal__.validateExpression(expression, locals, globals, options);
-							return evalFn(expression);
-						} else if (types.has(evalCacheObject, expression)) {
-							return evalCacheObject[expression];
-						} else {
-							__Internal__.validateExpression(expression, locals, globals, options);
-							const result = evalFn(expression);
-							evalCacheObject[expression] = result;
-							return result;
-						};
-					} else {
-						__Internal__.validateExpression(expression, locals, globals, options);
+					if (notDenied && types.has(evalCacheObject, expression)) {
+						return evalCacheObject[expression];
 					};
 
-					return undefined;
+					__Internal__.validateExpression(expression, locals, globals, options);
+
+					root.DD_ASSERT && root.DD_ASSERT(!notDenied, "??? Should have been denied by '__Internal__.validateExpression' ???");
+
+					const result = evalFn(expression);
+
+					if (!notDenied) {
+						evalCacheObject[expression] = result;
+					};
+
+					return result;
 				}));
 
 
