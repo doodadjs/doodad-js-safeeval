@@ -599,11 +599,11 @@ exports.add = function add(modules) {
 
 					__Internal__.validateExpression(expression, locals, globals, options);
 
-					root.DD_ASSERT && root.DD_ASSERT(!notDenied, "??? Should have been denied by '__Internal__.validateExpression' ???");
+					root.DD_ASSERT && root.DD_ASSERT(notDenied, "??? Should have been denied by '__Internal__.validateExpression' ???");
 
 					const result = evalFn(expression);
 
-					if (!notDenied) {
+					if (notDenied) {
 						evalCacheObject[expression] = result;
 					};
 
