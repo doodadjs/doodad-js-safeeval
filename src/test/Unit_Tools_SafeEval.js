@@ -140,6 +140,9 @@ exports.add = function add(modules) {
 						group.runStep(3, {},	/**/ "((a,b)=>a+b)(1,2)", null, null, {allowFunctions: true});
 						group.runStep(2, {},	/**/ "((a)=>{return a+1})(1)", null, null, {allowFunctions: true});
 						group.runStep(3, {},	/**/ "((a,b)=>{return a+b})(1,2)", null, null, {allowFunctions: true});
+
+						// New function construct (arrow functions and now that: looks like people don't want to have to type "function")
+						group.runStep(1, {},	/**/ "({a() {return 1}}).a()", null, null, {allowFunctions: true});
 					});
 
 					command.runGroup("Denied", function(group, options) {
@@ -285,7 +288,11 @@ exports.add = function add(modules) {
 						// Classes
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "class Monkey");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(class Monkey)");
-						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(new (class Monkey {hack() {return eval(1)}})).hack()", null, null, {allowNew: true});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "(new (class Monkey {hack() {return eval('1')}})).hack()", null, null, {allowNew: true});
+
+						// New function construct (arrow functions and now that: looks like people don't want to have to type "function")
+						group.runStep(types.AccessDenied, {mode: 'isinstance'}, /**/ "({a() {return 1}}).a()");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},	/**/ "({a() {return eval('1')}}).a()", null, null, {allowFunctions: true});
 					});
 
 					command.finalize(function(err, dummy) {

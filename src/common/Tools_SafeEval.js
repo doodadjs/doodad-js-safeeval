@@ -118,7 +118,8 @@ exports.add = function add(modules) {
 					level = {name: ''},
 					prevLevel = level,
 					isShift = false,
-					noPrevChr = false;
+					noPrevChr = false,
+					maybeObject = false;
 
 				const levels = [level];
 
@@ -294,10 +295,10 @@ exports.add = function add(modules) {
 							tokenName += chr.chr;
 							chr = chr.nextChar();
 						} while (chr && ((chr.chr === '$') || (chr.chr === '_') || unicode.isAlnum(chr.chr, curLocale)));
-						if (tokenName === 'class') {
+						if (isGlobal && (tokenName === 'class')) {
 							// For simplicity
 							throw new types.AccessDenied("Classes are denied.");
-						} else if (tokenName === 'function') {
+						} else if (isGlobal && (tokenName === 'function')) {
 							if (!allowFunctions) {
 								throw new types.AccessDenied("Functions are denied.");
 							};
@@ -306,7 +307,7 @@ exports.add = function add(modules) {
 								throw new types.AccessDenied("Function in function is denied.");
 							};
 							isFunctionArgs = true;
-						} else if (isFunction && (tokenName === 'return')) {
+						} else if (isFunction && isGlobal && (tokenName === 'return')) {
 							// Ignore
 						} else {
 							lastTokens.push(tokenName);
@@ -355,11 +356,24 @@ exports.add = function add(modules) {
 						validateTokens();
 					} else if (chr.chr === '{') {
 						pushLevel('{');
+						maybeObject = isGlobal;
+						isGlobal = true;
+						isDot = false;
 					} else if (chr.chr === '}') {
 						popLevel('{');
 						isGlobal = false;
+						maybeObject = false;
 					} else if (chr.chr === '(') {
-						validateTokens();
+						if (maybeObject) {
+							if (!allowFunctions) {
+								// For simplicity
+								throw new types.AccessDenied("Functions are denied.");
+							};
+							maybeObject = false;
+							isFunctionArgs = true;
+						} else {
+							validateTokens();
+						};
 						pushLevel('(');
 					} else if (chr.chr === ')') {
 						popLevel('(');
