@@ -143,6 +143,7 @@ exports.add = function add(modules) {
 
 						// New function construct (arrow functions and now that: looks like people don't want to have to type "function")
 						group.runStep(1, {},	/**/ "({a() {return 1}}).a()", null, null, {allowFunctions: true});
+						group.runStep(1, {},	/**/ "({['a']() {return 1}}).a()", null, null, {allowFunctions: true});
 					});
 
 					command.runGroup("Denied", function(group, options) {
@@ -292,7 +293,9 @@ exports.add = function add(modules) {
 
 						// New function construct (arrow functions and now that: looks like people don't want to have to type "function")
 						group.runStep(types.AccessDenied, {mode: 'isinstance'}, /**/ "({a() {return 1}}).a()");
+						group.runStep(types.AccessDenied, {mode: 'isinstance'}, /**/ "({['a']() {return 1}}).a()");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},	/**/ "({a() {return eval('1')}}).a()", null, null, {allowFunctions: true});
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},	/**/ "({['a']() {return eval('1')}}).a()", null, null, {allowFunctions: true});
 					});
 
 					command.finalize(function(err, dummy) {
