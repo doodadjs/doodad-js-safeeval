@@ -191,6 +191,7 @@ exports.add = function add(modules) {
 							// String closure
 							isString = false;
 							noPrevChr = true;
+							prevChr = '';
 							isGlobal = false;
 						};
 					} else if (isRegExpFlags) {
@@ -210,6 +211,7 @@ exports.add = function add(modules) {
 							isRegExp = false;
 							isRegExpFlags = true;
 							noPrevChr = true;
+							prevChr = '';
 						};
 					} else if (isComment) {
 						if (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0) { // New line
@@ -222,6 +224,7 @@ exports.add = function add(modules) {
 							// End comment block
 							isCommentBlock = false;
 							noPrevChr = true;
+							prevChr = '';
 						};
 					} else if (isAssignment && (chr.chr === '>')) {
 						// Arrow function
@@ -252,10 +255,12 @@ exports.add = function add(modules) {
 						// Begin statement comment
 						isComment = true;
 						noPrevChr = true;
+						prevChr = '';
 					} else if ((prevChr === '/') && (chr.chr === '*')) {
 						// Begin comment block
 						isCommentBlock = true;
 						noPrevChr = true;
+						prevChr = '';
 					} else if (isGlobal && (lastTokens.length <= 0) && (prevChr === '/') && (chr.chr !== '/')) {
 						// Begin RegExp
 						if (!allowRegExp) {
@@ -267,6 +272,7 @@ exports.add = function add(modules) {
 							isEscape = true;
 						};
 						noPrevChr = true;
+						prevChr = '';
 					} else if ((chr.chr === ';') || (tools.indexOf(__Internal__.newLineChars, chr.chr) >= 0)) { // End of statement
 						validateTokens();
 						let hasSemi = false;
@@ -375,6 +381,7 @@ exports.add = function add(modules) {
 							validateTokens();
 						};
 						pushLevel('(');
+						noPrevChr = true;
 					} else if (chr.chr === ')') {
 						popLevel('(');
 						if (isFunctionArgs) {
@@ -382,6 +389,8 @@ exports.add = function add(modules) {
 							functionArgs = lastTokens;
 							lastTokens = [];
 						};
+						noPrevChr = true;
+						prevChr = '';
 					} else if (((chr.chr === '+') || (chr.chr === '-')) && (prevChr === chr.chr)) {
 						validateTokens();
 						// Increment
@@ -389,6 +398,7 @@ exports.add = function add(modules) {
 							throw new types.AccessDenied("Increment operators are not allowed.");
 						};
 						noPrevChr = true;
+						prevChr = '';
 					} else if (((chr.chr === '<') || (chr.chr === '>')) && (prevChr === chr.chr)) {
 						// Potential shift assignment
 						isShift = true;
@@ -411,7 +421,6 @@ exports.add = function add(modules) {
 					};
 					if (noPrevChr) {
 						noPrevChr = false;
-						prevChr = '';
 					} else {
 						prevChr = chr.chr;
 					};
@@ -613,7 +622,7 @@ exports.add = function add(modules) {
 
 					__Internal__.validateExpression(expression, locals, globals, options);
 
-					root.DD_ASSERT && root.DD_ASSERT(notDenied, "??? Should have been denied by '__Internal__.validateExpression' ???");
+					root.DD_ASSERT && root.DD_ASSERT(notDenied, "Should have been denied by '__Internal__.validateExpression'.");
 
 					const result = evalFn(expression);
 

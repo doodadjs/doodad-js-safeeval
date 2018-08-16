@@ -228,6 +228,12 @@ exports.add = function add(modules) {
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[]+[]"); // invalid property accessor
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]][([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+([][[]]+[])[+!+[]]+(![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[+!+[]]+([][[]]+[])[+[]]+([][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[+!+[]+[+[]]]+(!![]+[])[+!+[]]]((![]+[])[+!+[]]+(![]+[])[!+[]+!+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]+(!![]+[])[+[]]+(![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]]+[+!+[]]+(!![]+[][(![]+[])[+[]]+([![]]+[][[]])[+!+[]+[+[]]]+(![]+[])[!+[]+!+[]]+(!![]+[])[+[]]+(!![]+[])[!+[]+!+[]+!+[]]+(!![]+[])[+!+[]]])[!+[]+!+[]+[+[]]])()"); // invalid property accessor
 
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!([])"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!(([]))"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "!([  ])"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "! ( [  ] )"); // invalid property accessor
+						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "([])+([])"); // invalid property accessor
+
 						// zero-day report by Mike Samuel
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "constructor.constructor('return eval')()('1')");
 						group.runStep(types.AccessDenied, {mode: 'isinstance'},  /**/ "x.constructor.constructor('return eval')()('1')", {x: 0});
