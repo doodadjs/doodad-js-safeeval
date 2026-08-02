@@ -41,16 +41,8 @@ exports.add = function add(modules) {
 				const doodad = root.Doodad,
 					types = doodad.Types,
 					tools = doodad.Tools,
-					namespaces = doodad.Namespaces,
 					test = doodad.Test,
-					unit = test.Tools.SafeEval,
-					io = doodad.IO,
 					safeEval = tools.SafeEval;
-
-
-				if (!options) {
-					options = {};
-				};
 
 
 				test.runCommand(safeEval.eval, "Doodad.Tools.SafeEval.eval", function(command, options) {

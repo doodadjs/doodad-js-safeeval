@@ -139,7 +139,6 @@ exports.add = function add(modules) {
 				};
 
 				const validateTokens = function validateTokens() {
-					/* eslint no-cond-assign: "off" */
 					let tokenName;
 					while (tokenName = lastTokens.shift()) {
 						let deniedToken = '';
